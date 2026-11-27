@@ -6,18 +6,6 @@ BeniBust installs a key-only root SSH server on your own robot's unsigned `hbre`
 partition, with an AP-only telnet fallback. It is owner-initiated, reversible, and
 built entirely from firmware you supply. It does not bundle vendor images, keys, or
 tokens, and it does not contact vendor infrastructure.
-
-> This tool is for hardware you own. Keep vendor communication open for responsible
-> disclosure. The legal basis for owner jailbreaking/rooting in the US includes the
-> DMCA §1201 triennial exemptions (the same line of authority as iPhone jailbreaking)
-> and right-to-repair principles. This document is not legal advice; confirm your
-> jurisdiction's rules before distribution.
-
-This repository is the **clean home of the tool**: the jailbreak, the SDK modules the
-build and flash path actually imports, the read-only probe, and the packaging scripts.
-The reverse-engineering notes, evidence captures, web console and simulator live in a
-separate private research repository and are not needed here.
-
 ---
 
 ## What it does
