@@ -18,8 +18,6 @@ benibust-release/
   sdk/freewheel/             the SDK (module set the build path needs)
   tools/beni_probe.py        read-only diagnostics: ports, firmware version, serial
   docs/BENIBUST.md           scope, the key/firmware walkthrough, rollback, disclosure
-  docs/ota.md                the OTA/packaging protocol, for auditing what we do
-  docs/shell-enable.md       the engineering log: how the route was found and proven
   requirements.txt           the two optional third-party packages
   NOTICE                     required third-party attribution for this bundle
   MANIFEST.json              every file with its sha256, plus the build commit
