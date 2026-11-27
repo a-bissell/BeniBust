@@ -1,6 +1,25 @@
-# BeniBust
+```
+██████╗ ███████╗███╗   ██╗██╗██████╗ ██╗   ██╗███████╗████████╗
+██╔══██╗██╔════╝████╗  ██║██║██╔══██╗██║   ██║██╔════╝╚══██╔══╝
+██████╔╝█████╗  ██╔██╗ ██║██║██████╔╝██║   ██║███████╗   ██║   
+██╔══██╗██╔══╝  ██║╚██╗██║██║██╔══██╗██║   ██║╚════██║   ██║   
+██████╔╝███████╗██║ ╚████║██║██████╔╝╚██████╔╝███████║   ██║   
+╚═════╝ ╚══════╝╚═╝  ╚═══╝╚═╝╚═════╝  ╚═════╝ ╚══════╝   ╚═╝   
+                      o w n e r   r o o t
+```
 
-**Owner root for the Mondo Beni robot — a right-to-repair jailbreak.**
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Working-brightgreen.svg" alt="Status">
+  <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License">
+  <img src="https://img.shields.io/badge/Python-3.10+-yellow.svg" alt="Python">
+  <img src="https://img.shields.io/badge/Hardware-Mondo_Beni_LZ110-orange.svg" alt="Hardware">
+</p>
+
+<div align="center">
+
+**Owner root jailbreak for the Mondo Beni robot**
+
+</div>
 
 BeniBust installs a key-only root SSH server on your own robot's unsigned `hbre`
 partition, with an AP-only telnet fallback. 
@@ -10,6 +29,7 @@ built entirely from firmware you supply.
 
 It does not bundle vendor images, keys, or
 tokens, and it does not contact vendor infrastructure.
+
 ---
 
 ## What it does
