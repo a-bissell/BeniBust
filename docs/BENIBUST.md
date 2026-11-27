@@ -221,7 +221,7 @@ python3 benibust.py --dry-run --i-own-this-device
 python3 benibust.py --shell
 
 # Save a device state snapshot after root
-python3 benibust.py --i-own-this-device --backup-dir ./freewheel-state
+python3 benibust.py --i-own-this-device --backup-dir ./benibust-state
 
 # Roll back by flashing a stock package (e.g. your own pre-FW dump, repackaged)
 python3 benibust.py --restore /path/to/vendor_or_dump_package.zip
