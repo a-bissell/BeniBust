@@ -1,7 +1,7 @@
 """MD-TS (`secure_v2`) encrypted control-bus session over zenoh.
 
 Clean-room implementation of the byte-level spec in
-native-analysis/community-crosscheck.md §4 (a community cross-check that first
+the community cross-check §4 (a note that first
 published the layout, and which reports hardware testing on an LZ110). Known-answer
 vectors frozen from that cross-check are checked in tests/test_md_ts.py.
 

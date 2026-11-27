@@ -1,6 +1,7 @@
 """Freewheel — clean-room UCP control SDK for the Mondo BENI robot.
 
-Reverse-engineered statically from MondoApp v1.0.13 (see ../native-analysis/).
+Reverse-engineered statically from MondoApp v1.0.13; the analysis lives in the
+separate research repository.
 Untested against hardware; see README.md for the assumptions to verify first.
 """
 from .client import MondoClient

@@ -4,7 +4,7 @@ Schemas recovered statically from MondoApp v1.0.13's Dart (`libapp.so` via blutt
 the `md_device_protocol` generated protobuf messages. Every command/response is an
 envelope `{ WireHeader header = 1; <X>Data data = 2; }`; the real fields live in the
 `<X>Data` sub-message. Field tags/names/types and the topic→message map are in
-`cmd_schemas.json` (full `.proto` in ../../native-analysis/cmd-protobuf-schemas.proto).
+`cmd_schemas.json` (the full `.proto` is kept in the research repository).
 
 This is a minimal proto3 encoder driven by that schema — enough to build a `/cmd`
 Put payload. Pair it with `MondoClient.publish()` (the zenoh send side). STATIC: the

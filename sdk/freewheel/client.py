@@ -286,7 +286,7 @@ class MondoClient:
     def cmd(self, topic: str, seq: int = 0, **fields) -> None:
         """Publish a `/cmd/*` command: encodes the recovered protobuf envelope
         (header{seqNum:seq} + data{**fields}) and sends it as a zenoh Put on the
-        topic. See freewheel.cmd_proto / native-analysis/cmd-protobuf-schemas.proto
+        topic. See freewheel.cmd_proto / cmd_schemas.json
         for each topic's fields. Example:
 
             robot.cmd("cmd/mission/request", missionId=3, subMode=1)
@@ -332,7 +332,7 @@ class MondoClient:
             w = self._waiters.pop(key, None)
         return w["result"] if (got and w) else None
 
-    # -- control-bus crypto mode (v1.0.85+; see native-analysis/version-diff-1.0.85.md) --
+    # -- control-bus crypto mode (v1.0.85+; see the version-diff notes) --
     def crypto_info(self, timeout: float = 2.0):
         """Query the robot's control-bus crypto mode. Returns the decoded
         `get_crypto_info_rsp` data — ``{'retCode', 'cmdVersion', 'isEncrypted',
@@ -354,7 +354,7 @@ class MondoClient:
             return None
         return rsp["data"] if rsp else None
 
-    # -- UWB tracker / follow (see native-analysis/uwb-tracker.md) --------------
+    # -- UWB tracker / follow (see the UWB-tracker notes) -----------------------
     # Follow is computed ON THE ROBOT; these just select a target and toggle the
     # mode over the /cmd bus. Requires a tracker already PAIRED to the robot (a
     # physical step: long-press both power buttons ~5 s). STATIC/experimental —

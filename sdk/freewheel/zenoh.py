@@ -1,6 +1,7 @@
 """Zenoh-over-UCP link framing (clean-room, from static RE of libmondo_native.so).
 
-Reference: native-analysis/README.md §3b (`mdZenohOverUcp*`). The robot's control
+Reference: the protocol report §3b (`mdZenohOverUcp*`), in the research repository.
+The robot's control
 bus **and telemetry** ride zenoh-pico over this link framing, which itself rides on
 UCP channel 0. This module decodes the **link layer** (the `A4`–`A7` frames) and
 hands back the zenoh-pico DATA batches, driving the epoch state machine as it goes.

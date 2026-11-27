@@ -31,8 +31,8 @@ VERSION_FILE = REPO / "sdk" / "freewheel" / "__init__.py"
 # The SDK modules shipped here. `__init__.py` imports the whole package eagerly, so
 # this is the full module set (all stdlib) rather than only what the build path
 # reaches — keeping the release byte-identical to the tree the tests run against
-# instead of a trimmed variant. The excluded directories (webui/, sitl/) hold the
-# browser console and the virtual robot, which a verifier doesn't need.
+# instead of a trimmed variant. There is no web console or virtual robot in this
+# repo, so the set below is simply the package.
 JAILBREAK_MODULES = (
     "__init__.py",
     "ble.py",

@@ -1,4 +1,4 @@
-"""Carve the firmware package out of a day-one OTA capture (see native-analysis/ota.md).
+"""Carve the firmware package out of a day-one OTA capture (see docs/ota.md).
 
 Path (B) of the OTA capture plan: the app POSTs the raw firmware **.zip** to the
 robot's LAN upload server at `http://192.168.7.1:16170/v2/upgrades/…` as a

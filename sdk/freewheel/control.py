@@ -1,6 +1,7 @@
 """Control-packet encoding for the Mondo robot (clean-room, from static RE).
 
-Reference: native-analysis/control-packet.md. The drive payload is an 8-byte
+Reference: the control-packet notes in the research repository. The drive payload
+is an 8-byte
 little-endian u64 of bit-packed fields. Scaling mirrors the app's `_map2000` /
 `_map62`. The `ControlState.to_bytes()` path also replicates the app's `isLock`
 safety override so our wire output matches `packControl` exactly.

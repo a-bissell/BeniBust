@@ -1,4 +1,4 @@
-"""UWB tracker / follow telemetry view (clean-room; see native-analysis/uwb-tracker.md).
+"""UWB tracker / follow telemetry view (clean-room; see the UWB-tracker notes).
 
 Follow is computed on the robot; the app/SDK select a target and read back derived
 status. This module turns the robot→app telemetry Puts into a live `TrackingState`

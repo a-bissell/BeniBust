@@ -1,7 +1,7 @@
 """UCP reliable-UDP transport (clean-room, from static RE of libmondo_native.so).
 
-Reference: native-analysis/README.md §3a, control-packet.md §4, and the
-community cross-check (native-analysis/community-crosscheck.md §2). Counter
+Reference: the protocol report §3a, the control-packet notes §4, and the
+community cross-check (§2) — all in the research repository. Counter
 semantics follow the community SDK notes, which report hardware testing on an
 LZ110. They are pinned by sdk/tests/test_crosscheck.py.
 

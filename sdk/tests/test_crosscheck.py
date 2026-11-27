@@ -5,8 +5,8 @@
 from a community SDK's encoders. That project is not needed to run this. Agreement is asserted where the two implementations should agree.
 Where they are known to differ, the test pins the exact difference, so a change
 on either side gets noticed. UCP counters and SACK were aligned with the community
-notes, so those vectors are now asserted byte-identical. See
-native-analysis/community-crosscheck.md.
+notes, so those vectors are now asserted byte-identical. See `docs/ota.md` and the
+community cross-check in the research repository.
 
 The MD-TS and official-SDK PSK sections have no Freewheel implementation yet.
 Here they are recomputed independently from the documented key schedule:

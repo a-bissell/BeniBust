@@ -12,7 +12,7 @@ It answers the questions that decide what to do next, without needing SSH:
 Zero third-party SDK dependencies — everything here comes from this repo's `sdk/freewheel`.
 
 Usage:
-    python3 native-analysis/tools/beni_probe.py
+    python3 tools/beni_probe.py
     ... --host 192.168.7.1
     ... --expect 26.11.19.06      # warn if the running version differs
 
@@ -35,9 +35,9 @@ from typing import Any
 def _locate_sdk() -> Path:
     """Find the bundled `sdk/` directory from either layout.
 
-    In the repo the script lives at `native-analysis/tools/`, so the SDK is two
-    levels up; in the release zip it lives at `tools/`, one level up. Walk up
-    until a `sdk/freewheel/` package is found rather than assuming a fixed depth.
+    In this repo the script lives at `tools/`, so the SDK is one level up; the
+    same holds in the release zip. Walk up until a `sdk/freewheel/` package is
+    found rather than assuming a fixed depth.
     """
     env = os.environ.get("FREEWHEEL_SDK")
     if env and (Path(env) / "freewheel").is_dir():

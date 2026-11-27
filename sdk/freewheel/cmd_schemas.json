@@ -6864,5 +6864,5 @@
    }
   ]
  },
- "_note": "Superset covering MondoApp v1.0.13 + v1.0.85. v1.0.85-new /cmd messages are custom DTO codecs (not protobuf-dart); field names recovered, many tags/types are 'unknown' (encode raises; decode reads raw by wire-type). See native-analysis/version-diff-1.0.85.md and cmd-delta-1.0.85.json."
+ "_note": "Superset covering MondoApp v1.0.13 + v1.0.85. v1.0.85-new /cmd messages are custom DTO codecs (not protobuf-dart); field names recovered, many tags/types are 'unknown' (encode raises; decode reads raw by wire-type). See the version-diff and cmd-delta notes in the research repository."
 }

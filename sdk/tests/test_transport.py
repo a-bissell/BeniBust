@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """UCP ARQ behaviour (python -m tests.test_transport).
 
-Counter/SACK semantics follow the community cross-check
-(native-analysis/community-crosscheck.md §2); byte-level parity is in test_crosscheck.py. This file checks the behaviour:
+Counter/SACK semantics follow the community cross-check (§2); byte-level parity is in test_crosscheck.py. This file checks the behaviour:
 in-order delivery, out-of-order buffering + SACK, duplicates, fragmentation,
 retransmit/ack, immediate ack, and the 8-byte ch0 guard."""
 import os
