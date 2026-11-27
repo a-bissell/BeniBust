@@ -1,10 +1,14 @@
 # BeniBust
 
-**Owner root for the Mondo/Beni LZ110 X5 robot — a right-to-repair jailbreak.**
+**Owner root for the Mondo Beni robot — a right-to-repair jailbreak.**
 
 BeniBust installs a key-only root SSH server on your own robot's unsigned `hbre`
-partition, with an AP-only telnet fallback. It is owner-initiated, reversible, and
-built entirely from firmware you supply. It does not bundle vendor images, keys, or
+partition, with an AP-only telnet fallback. 
+
+It is owner-initiated, reversible, and
+built entirely from firmware you supply. 
+
+It does not bundle vendor images, keys, or
 tokens, and it does not contact vendor infrastructure.
 ---
 
