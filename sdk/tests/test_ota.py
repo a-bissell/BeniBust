@@ -666,6 +666,147 @@ def test_preflight_refuses_a_low_battery_robot():
                                ignore_posture=True) == []
 
 
+# ── full OTA: Zenoh grant over the simulated robot + TUS upload to the mock :8085 ──
+
+def test_upload_v2_end_to_end_against_sim():
+    from freewheel import md_ts
+    from freewheel.sitl import SimResponder as _SimResponder
+
+    d = _tmpdir()
+    pkg = _build_package(d / "V26.11.19.37_lz110_freewheel.zip")
+    port = _free_udp_port()
+    sim = _SimResponder("127.0.0.1", port, enable_video=False)       # plaintext robot
+    sim.start()
+    time.sleep(0.2)
+    try:
+        with _MockUpgrade(SECRET, {}) as mock:
+            token_path = d / "media_token"
+            ota.save_media_token(SECRET, token_path, expected_sha256=SECRET_SHA)
+            old = os.environ.get("FREEWHEEL_MEDIA_TOKEN")
+            os.environ["FREEWHEEL_MEDIA_TOKEN"] = SECRET
+            try:
+                task = ota.create_ota_task(pkg, host="127.0.0.1", ucp_port=port, ignore_battery=True)
+                assert task["upload_grant_token"].startswith("sim-grant-")
+                assert task["device_id"] == _SimResponder.SIM_SERIAL
+                assert task["size"] == pkg.stat().st_size
+                assert task["version"] == "26.11.19.37"
+                assert task["battery"]["soc"] is not None
+
+                result = ota.upload_firmware(
+                    pkg, host="127.0.0.1", port=mock.port, ucp_port=port, mode="v2",
+                    scheme="http", bearer_token=SECRET, ignore_battery=True,
+                    upgrade_id=task["upgrade_id"], upload_token=task["upload_grant_token"],
+                )
+                assert result.mode == "v2" and result.remote_verified
+                assert bytes(mock.uploads[task["upgrade_id"]]) == pkg.read_bytes()
+                assert mock.offset_conflicts == 0, "a clean upload must not hit a TUS offset conflict"
+
+                # Auto mode with an already-minted session must stay on V2 (not V1).
+                fresh = _tmpdir()
+                pkg2 = _build_package(fresh / "V26.11.19.38_lz110_freewheel.zip", version="26.11.19.38")
+                task2 = ota.create_ota_task(pkg2, host="127.0.0.1", ucp_port=port, ignore_battery=True)
+                auto = ota.upload_firmware(
+                    pkg2, host="127.0.0.1", port=mock.port, ucp_port=port, mode="auto",
+                    scheme="http", bearer_token=SECRET, ignore_battery=True,
+                    upgrade_id=task2["upgrade_id"], upload_token=task2["upload_grant_token"],
+                )
+                assert auto.mode == "v2", f"auto mode with a minted session must stay V2, got {auto.mode}"
+                assert auto.upgrade_id == task2["upgrade_id"]
+                assert bytes(mock.uploads[task2["upgrade_id"]]) == pkg2.read_bytes()
+
+                # Resume: a session that already holds a prefix must continue from there.
+                partial = _tmpdir()
+                pkg3 = _build_package(partial / "V26.11.19.39_lz110_freewheel.zip", version="26.11.19.39")
+                task3 = ota.create_ota_task(pkg3, host="127.0.0.1", ucp_port=port, ignore_battery=True)
+                blob = pkg3.read_bytes()
+                mock.uploads[task3["upgrade_id"]] = bytearray(blob[:700])
+                resumed = ota.upload_firmware(
+                    pkg3, host="127.0.0.1", port=mock.port, ucp_port=port, mode="v2",
+                    scheme="http", bearer_token=SECRET, ignore_battery=True,
+                    upgrade_id=task3["upgrade_id"], upload_token=task3["upload_grant_token"],
+                    chunk_size=64 * 1024,
+                )
+                assert resumed.mode == "v2" and resumed.remote_verified
+                assert bytes(mock.uploads[task3["upgrade_id"]]) == blob, "resume must not restart from 0"
+                assert mock.offset_conflicts == 0, "resume must read the server offset, not collide"
+
+                inst = ota.trigger_ota_install(
+                    "127.0.0.1", upgrade_id=task["upgrade_id"], upload_token=task["upload_grant_token"],
+                    port=mock.port, scheme="http", bearer_token=SECRET, ucp_port=port,
+                    ignore_battery=True,
+                )
+                assert inst["method"] == "v2_http_install"
+                assert task["upgrade_id"] in mock.installs
+            finally:
+                if old is None:
+                    os.environ.pop("FREEWHEEL_MEDIA_TOKEN", None)
+                else:
+                    os.environ["FREEWHEEL_MEDIA_TOKEN"] = old
+    finally:
+        sim.stop()
+
+def test_auto_mode_never_downgrades_a_safety_refusal_to_v1():
+    """A low battery must abort, not silently switch to the ungated V1 inbox path."""
+    from freewheel.sitl import SimResponder as _SimResponder
+
+    d = _tmpdir()
+    pkg = _build_package(d / "V26.11.19.40_lz110_freewheel.zip", version="26.11.19.40")
+    port = _free_udp_port()
+    sim = _SimResponder("127.0.0.1", port, enable_video=False)
+    sim.start()
+    time.sleep(0.2)
+    try:
+        with _MockUpgrade(SECRET, {}) as mock:
+            old = os.environ.get("FREEWHEEL_MEDIA_TOKEN")
+            os.environ["FREEWHEEL_MEDIA_TOKEN"] = SECRET
+            try:
+                try:
+                    ota.upload_firmware(
+                        pkg, host="127.0.0.1", port=mock.port, ucp_port=port, mode="auto",
+                        scheme="http", bearer_token=SECRET,
+                        # Nothing on the robot is below 100%, so this forces a refusal.
+                        min_battery_pct=101, ignore_battery=False,
+                    )
+                except ota.SafetyValidationError as e:
+                    assert "battery too low" in str(e)
+                else:
+                    raise AssertionError("auto mode must propagate the battery refusal")
+                # No bytes may have been uploaded through the ungated V1 path.
+                assert not any(method == "PATCH" for method, _p in mock.requests), mock.requests
+                assert not mock.uploads
+            finally:
+                if old is None:
+                    os.environ.pop("FREEWHEEL_MEDIA_TOKEN", None)
+                else:
+                    os.environ["FREEWHEEL_MEDIA_TOKEN"] = old
+    finally:
+        sim.stop()
+
+def test_serial_number_and_ota_control_over_zenoh():
+    from freewheel import MondoClient
+    from freewheel.sitl import SimResponder as _SimResponder
+
+    port = _free_udp_port()
+    sim = _SimResponder("127.0.0.1", port, enable_video=False)
+    sim.start()
+    time.sleep(0.2)
+    client = MondoClient(host="127.0.0.1", port=port, log=lambda _m: None)
+    client.connect()
+    time.sleep(0.3)
+    try:
+        assert client.serial_number(timeout=3.0) == _SimResponder.SIM_SERIAL
+        rsp = client.ota_control(ota.OTA_CMD_QUERY, timeout=3.0)
+        assert rsp is not None and int(rsp.get("retCode", -1)) == 0
+        started = client.ota_control(
+            ota.OTA_CMD_START, timeout=3.0,
+            task={"protocolVersion": 2, "upgradeId": "u-1", "deviceId": _SimResponder.SIM_SERIAL,
+                  "sha256": "0" * 64, "size": 10, "version": "1.2.3.4", "originalFilename": "V1.zip"},
+        )
+        assert started["task"]["uploadGrantToken"].startswith("sim-grant-")
+    finally:
+        client.close()
+        sim.stop()
+
 # ── CLI surface ─────────────────────────────────────────────────────────────
 
 def test_cli_help_and_doctor_exit_codes():

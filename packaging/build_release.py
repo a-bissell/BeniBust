@@ -31,8 +31,8 @@ VERSION_FILE = REPO / "sdk" / "freewheel" / "__init__.py"
 # The SDK modules shipped here. `__init__.py` imports the whole package eagerly, so
 # this is the full module set (all stdlib) rather than only what the build path
 # reaches — keeping the release byte-identical to the tree the tests run against
-# instead of a trimmed variant. There is no web console or virtual robot in this
-# repo, so the set below is simply the package.
+# instead of a trimmed variant. `sitl/` is the minimal loopback robot the offline
+# tests drive; it needs no web console and no hardware.
 JAILBREAK_MODULES = (
     "__init__.py",
     "ble.py",
@@ -64,8 +64,9 @@ TEST_FILES = ("test_ota.py", "test_ble.py", "test_md_ts.py", "test_cmd_proto.py"
               "test_transport.py", "test_zenoh_pico.py", "test_request.py",
               "test_crosscheck.py")
 
-# This repo ships no SITL peer or web console: the suites here cover the build,
-# verification, wire-format and crypto paths, all of which run against the real code.
+# The simulated robot the offline suites drive, shipped with `--with-tests` so the
+# end-to-end cases (OTA upload, MD-TS handshake, request/response) run from the zip.
+SITL_PACKAGE = "sitl"
 
 
 def package_version() -> str:
@@ -100,6 +101,9 @@ def stage(root: Path, *, with_tests: bool) -> Path:
         _copy(REPO / "packaging" / extra, out / extra)
 
     if with_tests:
+        shutil.copytree(REPO / "sdk" / "freewheel" / SITL_PACKAGE,
+                        out / "sdk" / "freewheel" / SITL_PACKAGE,
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         (out / "sdk" / "tests").mkdir(parents=True, exist_ok=True)
         for name in TEST_FILES:
             _copy(REPO / "sdk" / "tests" / name, out / "sdk" / "tests" / name)

@@ -19,6 +19,7 @@ from urllib.request import Request, urlopen
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from freewheel import MondoClient, ble, md_ts  # noqa: E402
+from freewheel.sitl import SimResponder as _SimResponder  # noqa: E402
 
 
 def test_crc8_autosar_and_v0_framing():
@@ -190,6 +191,48 @@ def test_ble_button_hold_pairing_reconnect_and_tofu_pinning():
             assert e.code == "BLE_AUTH_BUSY"
         else:
             raise AssertionError("expected BLE_AUTH_BUSY")
+
+
+def test_e2e_ble_pair_then_md_ts_zenoh_wifi_provisioning():
+    with tempfile.TemporaryDirectory() as tmp:
+        id_path = os.path.join(tmp, "identity.json")
+        sim_ble = ble.SimBlePeripheral()
+        pair = ble.pair_and_get_softap(
+            identity_path=id_path,
+            sim_peripheral=sim_ble,
+            on_awaiting_button=lambda _dev: threading.Timer(0.05, sim_ble.press_button).start(),
+        )
+        ident = md_ts.Identity.load(pair.identity_path)
+
+        # Spin up a Zenoh UCP responder requiring MD-TS with the exact keys paired over BLE
+        sec = md_ts.Responder(sim_ble.private_key, sim_ble.authorized)
+        sim = _SimResponder("127.0.0.1", 0, md_ts_responder=sec, enable_video=False)
+        sim.start()
+        port = sim._sock.getsockname()[1]  # noqa: SLF001
+        try:
+            with MondoClient(host="127.0.0.1", port=port, identity=ident, security="md-ts") as client:
+                aps = client.scan_wifi()
+                assert client.security_state == "md-ts"
+                assert len(aps) == 2 and aps[0]["ssid"] == "HomeNet-5G"
+
+                # Wrong password -> robot reports WRONG_KEY
+                try:
+                    client.provision_wifi("HomeNet-5G", "wrong-pass", timeout=5.0)
+                except RuntimeError as e:
+                    assert "WRONG_KEY" in str(e)
+                else:
+                    raise AssertionError("expected WRONG_KEY failure")
+
+                # Valid password -> 3-stage commit succeeds and returns robot LAN IPv4
+                ok = client.provision_wifi("HomeNet-5G", "correct-horse", timeout=5.0)
+                assert ok["ok"] is True and ok["state"] == "succeeded"
+                assert ok["ipv4"] == "192.168.1.42"
+
+                client.switch_wifi_to_ap()
+                time.sleep(0.1)
+                assert sim._wifi_mode == "ap"  # noqa: SLF001
+        finally:
+            sim.stop()
 
 
 def main():

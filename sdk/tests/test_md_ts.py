@@ -197,6 +197,80 @@ def test_identity_legacy_format_roundtrip_and_overwrite_guard():
     assert m.Identity.load(q).private_key == other.private_key
 
 
+
+# ── end to end against the simulated robot (MD-TS required) ──────────────────
+def _sim(port, authorized_ident=None):
+    from freewheel.sitl import SimResponder as _SimResponder
+    robot_priv = m.random_nonzero(32)
+    auth = {authorized_ident.client_id: authorized_ident.public_key} if authorized_ident else {}
+    resp = m.Responder(robot_priv, auth)
+    sim = _SimResponder("127.0.0.1", port, md_ts_responder=resp)
+    sim.start()
+    time.sleep(0.2)
+    return sim, resp
+
+def _client(port, **kw):
+    from freewheel import MondoClient
+    c = MondoClient(host="127.0.0.1", port=port, log=lambda s: None, **kw)
+    c.connect()
+    time.sleep(0.3)
+    return c
+
+def test_e2e_encrypted_request_response_and_telemetry():
+    from freewheel.tracking import TrackingMonitor
+    ident = m.Identity.generate()
+    sim, resp = _sim(9071, authorized_ident=ident)
+    tm = TrackingMonitor()
+    c = _client(9071, security="md-ts", identity=ident, robot_public_key=resp.public_key)
+    c._user_on_message = tm.on_message
+    tm.unseal = c.unseal
+    try:
+        rsp = c.request("cmd/common/ping_req", timeout=2.0)
+        assert c.security_state == "md-ts" and rsp is not None, (c.security_state, rsp)
+        assert resp.session is not None and resp.session.confirmed
+        c.follow(target_id=1)                                               # sealed /cmd
+        time.sleep(1.0)
+        assert tm.state.follow_enabled is True, tm.snapshot()                # sealed telemetry decoded
+        raw = TrackingMonitor()                                             # same frames, no unseal
+        c._user_on_message = lambda ch, p: (tm.on_message(ch, p), raw.on_message(ch, p))
+        time.sleep(0.5)
+        assert raw.msgs == 0 and tm.msgs > 0                                # telemetry really is sealed
+    finally:
+        c.close()
+        sim.stop()
+
+def test_e2e_plaintext_is_ignored_by_md_ts_robot():
+    sim, resp = _sim(9072)
+    c = _client(9072, security="plaintext")
+    try:
+        assert c.request("cmd/common/ping_req", timeout=1.0) is None
+    finally:
+        c.close()
+        sim.stop()
+
+def test_e2e_unauthorized_identity_rejected():
+    sim, resp = _sim(9073)                                                  # nobody authorized
+    c = _client(9073, security="auto", identity=m.Identity.generate(), robot_public_key=resp.public_key)
+    try:
+        _raises("UNAUTHORIZED_CLIENT", c.request, "cmd/common/ping_req")
+    finally:
+        c.close()
+        sim.stop()
+
+def test_e2e_auto_falls_back_to_plaintext_robot():
+    from freewheel.sitl import SimResponder as _SimResponder
+    sim = _SimResponder("127.0.0.1", 9074)                                  # plaintext robot
+    sim.start()
+    time.sleep(0.2)
+    c = _client(9074, security="auto", identity=m.Identity.generate(), robot_public_key=b"\x01" * 32)
+    try:
+        assert c.request("cmd/common/ping_req", timeout=2.0) is not None
+        assert c.security_state == "plaintext"
+    finally:
+        c.close()
+        sim.stop()
+
+
 def main():
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     for fn in tests:

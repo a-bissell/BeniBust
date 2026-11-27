@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """UCP ARQ behaviour (python -m tests.test_transport).
 
-Counter/SACK semantics follow the community cross-check (§2); byte-level parity is in test_crosscheck.py. This file checks the behaviour:
+Counter/SACK semantics follow the community cross-check
+(native-analysis/community-crosscheck.md §2); byte-level parity is in test_crosscheck.py. This file checks the behaviour:
 in-order delivery, out-of-order buffering + SACK, duplicates, fragmentation,
 retransmit/ack, immediate ack, and the 8-byte ch0 guard."""
 import os
@@ -142,6 +143,27 @@ def test_auto_ack_off_is_silent():
     n = len(u._sock.out)
     u.handle_datagram(_rel(0, b"\xa7x"))
     assert len(u._sock.out) == n
+
+
+def test_loopback_against_sim_request_response():
+    """End-to-end: request() over reliable ch3 against the SITL robot peer."""
+    from freewheel.sitl import SimResponder as _SimResponder
+    from freewheel import MondoClient
+    sim = _SimResponder("127.0.0.1", 9053)
+    sim.start()
+    time.sleep(0.2)
+    c = MondoClient(host="127.0.0.1", port=9053, log=lambda m: None)
+    c.connect()
+    try:
+        time.sleep(0.3)
+        rsp = c.request("cmd/common/ping_req", timeout=2.0)
+        assert rsp is not None and rsp["seqNum"] >= 1, rsp
+        time.sleep(0.3)
+        assert c._t.unacked == 0                        # sim acked everything
+        assert not c._t.link_dead
+    finally:
+        c.close()
+        sim.stop()
 
 
 def main():
