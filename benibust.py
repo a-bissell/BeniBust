@@ -25,7 +25,7 @@ when enabled, binds only to the robot AP (192.168.7.1:23/:2323).
 
 Requires: this repo's `sdk/` (bundled — no pip installs), `e2fsprogs`, `ssh-keygen`,
 and (for a secure_v2 robot) the `cryptography` package. You need two artifacts off
-your own hardware, and freewheel can now fetch both:
+your own hardware, and BeniBust can now fetch both:
 
     python3 benibust.py --fetch-firmware     # all_in_one.zip + hbre.img from your robot
     python3 -m freewheel.ota extract-token ~/Downloads/MondoApp.apk   # your media bearer
@@ -144,7 +144,7 @@ def ensure_ssh_key(path: Path) -> str:
         path.parent.mkdir(parents=True, exist_ok=True)
         step(f"Generating SSH key {path}")
         r = subprocess.run(
-            ["ssh-keygen", "-t", "ed25519", "-f", str(path), "-N", "", "-C", "freewheel"],
+            ["ssh-keygen", "-t", "ed25519", "-f", str(path), "-N", "", "-C", "benibust"],
             capture_output=True, text=True,
         )
         if r.returncode != 0:
@@ -506,7 +506,7 @@ global_timeout = 3600
             output,
             base_zip_path=base_zip,
             allow_unsafe_x5_override=True,
-            logical_filename=f"V{version}_lz110_freewheel.zip",
+            logical_filename=f"V{version}_lz110_benibust.zip",
         )
         for w in report.warnings:
             warn(w)
@@ -619,7 +619,7 @@ def verify_root(host: str, ssh_port: int = 2222, ssh_key: Path = DEFAULT_SSH_KEY
             ok(f"key-only SSH root on :{ssh_port}")
             print()
             print("  " + "=" * 60)
-            print("  FREEWHEEL ROOT ACHIEVED")
+            print("  BENIBUST ROOT ACHIEVED")
             print()
             print(f"    ssh -p {ssh_port} -i {Path(ssh_key).expanduser()} root@{host}")
             print()
@@ -851,9 +851,9 @@ def main() -> int:
 
     print("\033[1;37m")
     print("  ╔══════════════════════════════════════════╗")
-    print("  ║            F R E E W H E E L             ║")
-    print("  ║   owner root for Beni/Mondo X5 (LZ110)    ║")
-    print("  ║   right-to-repair jailbreak — own device  ║")
+    print("  ║             B E N I B U S T              ║")
+    print("  ║   owner root for Beni/Mondo X5 (LZ110)   ║")
+    print("  ║  right-to-repair jailbreak — own device  ║")
     print("  ╚══════════════════════════════════════════╝")
     print("\033[0m")
 
@@ -893,7 +893,7 @@ def main() -> int:
         ok(f"Stock hbre.img: {hbre_img} ({hbre_img.stat().st_size / 1e6:.0f} MB)")
 
         version = args.version or f"26.11.19.{int(time.time()) % 100:02d}"
-        output = Path(args.output) if args.output else Path(f"beni_fw/build_26.11/V{version}_lz110_freewheel.zip")
+        output = Path(args.output) if args.output else Path(f"beni_fw/build_26.11/V{version}_lz110_benibust.zip")
         output.parent.mkdir(parents=True, exist_ok=True)
 
         with tempfile.TemporaryDirectory(prefix="freewheel_") as tmp:
