@@ -61,7 +61,8 @@ TOOLS = ("beni_probe.py",)
 DOCS = ("docs/BENIBUST.md", "docs/ota.md", "docs/shell-enable.md")
 
 TEST_FILES = ("test_ota.py", "test_ble.py", "test_md_ts.py", "test_cmd_proto.py",
-              "test_transport.py", "test_zenoh_pico.py", "test_request.py")
+              "test_transport.py", "test_zenoh_pico.py", "test_request.py",
+              "test_crosscheck.py")
 
 # This repo ships no SITL peer or web console: the suites here cover the build,
 # verification, wire-format and crypto paths, all of which run against the real code.
