@@ -29,6 +29,7 @@ built entirely from firmware you supply.
 It does not bundle vendor images, keys, or
 tokens, and it does not contact vendor infrastructure.
 
+!! USE AT YOUR OWN RISK !!
 ---
 
 ## What it does
