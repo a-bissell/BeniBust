@@ -39,7 +39,7 @@ provide is placed in the package. The private key stays on your host.
     the plaintext control channel.
   - **`bleak`** — only for BLE pairing on real Bluetooth hardware.
 
-A device you own, reachable on its AP (`192.168.7.1`), USB-C (`192.168.123.1`), or
+A device you own, reachable on its AP (`192.168.7.1`), or
 your home LAN.
 
 ---
@@ -52,8 +52,7 @@ not the values themselves.
 ### 1. The media bearer token
 
 `md_upgrade` on `:8085` gates every read on `Authorization: Bearer <token>`, and the
-firmware verifies it by comparing `sha256(token)` against a **fixed digest** that is
-the same on every retail unit. This repo ships only the digest, never the secret.
+firmware verifies it by comparing `sha256(token)` against a **fixed digest**. This repo ships only the digest, never the secret.
 Recover the token from your own copy of the app:
 
 ```sh
@@ -162,28 +161,9 @@ If you have root, `/private/freewheel` holds the BeniBust keys and host keys, an
 `cam-service.bak` (if present) is the pre-BeniBust wrapper. The original camera binary
 remains at `/usr/hobot/bin/cam-service.real`.
 
-Full detail — the key/firmware walkthrough, discovery chain, fallbacks, safety notes
-and the responsible-disclosure process — is in [`docs/BENIBUST.md`](docs/BENIBUST.md).
+Full detail — the key/firmware walkthrough, discovery chain, fallbacks, safety notes — is in [`docs/BENIBUST.md`](docs/BENIBUST.md).
 The OTA/packaging protocol is documented in [`docs/ota.md`](docs/ota.md), and the
 engineering log of how the route was found and proven is
 [`docs/shell-enable.md`](docs/shell-enable.md).
 
 ---
-
-## What this repo does not contain
-
-Deliberately excluded, and not required to build or verify a release:
-
-- the reverse-engineering reports and `native-analysis/` notes;
-- evidence captures and firmware images;
-- the web control console and the simulated robot (SITL);
-- the full SDK: only the modules the build and flash path imports are here.
-
-If you are looking for the SDK to drive the robot, this is not that repository.
-
-## Licensing
-
-`NOTICE` carries the third-party attribution this bundle requires. Read it before
-redistributing. See [Scope](#what-this-repo-does-not-contain) above and the disclosure
-section of [`docs/BENIBUST.md`](docs/BENIBUST.md) before publishing exploit specifics —
-contact the vendor first.
