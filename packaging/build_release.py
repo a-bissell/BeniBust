@@ -58,7 +58,7 @@ JAILBREAK_MODULES = (
 # Read-only diagnostics the verifier will want; imports only client + ota.
 TOOLS = ("beni_probe.py",)
 
-DOCS = ("docs/BENIBUST.md", "docs/ota.md", "docs/shell-enable.md")
+DOCS = ("docs/BENIBUST.md",)
 
 TEST_FILES = ("test_ota.py", "test_ble.py", "test_md_ts.py", "test_cmd_proto.py",
               "test_transport.py", "test_zenoh_pico.py", "test_request.py",

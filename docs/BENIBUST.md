@@ -191,8 +191,6 @@ Two details that matter:
    known mismatch: V26.09 `hbre` on a V26.11 system runs older hobot/camera libs
    (functional instability, not a brick).
 
-See [`ota.md`](ota.md) for the protocol details behind each.
-
 ### 3. Confirm and go
 
 ```sh

@@ -166,8 +166,5 @@ If you have root, `/private/freewheel` holds the BeniBust keys and host keys, an
 remains at `/usr/hobot/bin/cam-service.real`.
 
 Full detail — the key/firmware walkthrough, discovery chain, fallbacks, safety notes — is in [`docs/BENIBUST.md`](docs/BENIBUST.md).
-The OTA/packaging protocol is documented in [`docs/ota.md`](docs/ota.md), and the
-engineering log of how the route was found and proven is
-[`docs/shell-enable.md`](docs/shell-enable.md).
 
 ---
