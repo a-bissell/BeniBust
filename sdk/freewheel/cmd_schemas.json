@@ -1,0 +1,6868 @@
+{
+ "topic_to_message": {
+  "cmd/audio/op_req": "AudioOpReq",
+  "cmd/audio/op_rsp": "AudioOpRsp",
+  "cmd/audio/play_file_req": "AudioPlayFileReq",
+  "cmd/audio/play_file_rsp": "AudioPlayFileRsp",
+  "cmd/camera/config_switch_cmd": "CameraConfigSwitchCmd",
+  "cmd/camera/unified_cmd": "CameraUnifiedCmd",
+  "cmd/capability/hardware_snapshot_req": "CapabilityHardwareSnapshotReq",
+  "cmd/capability/hardware_snapshot_rsp": "CapabilityHardwareSnapshotRsp",
+  "cmd/capability/software_snapshot_req": "CapabilitySoftwareSnapshotReq",
+  "cmd/capability/software_snapshot_rsp": "CapabilitySoftwareSnapshotRsp",
+  "cmd/common/accessory_activation_report_ack": "CommonAccessoryActivationReportAck",
+  "cmd/common/accessory_control_req": "CommonAccessoryControlReq",
+  "cmd/common/accessory_control_rsp": "CommonAccessoryControlRsp",
+  "cmd/common/accessory_deactivate_req": "CommonAccessoryDeactivateReq",
+  "cmd/common/accessory_deactivate_rsp": "CommonAccessoryDeactivateRsp",
+  "cmd/common/accessory_list_req": "CommonAccessoryListReq",
+  "cmd/common/accessory_list_rsp": "CommonAccessoryListRsp",
+  "cmd/common/get_crypto_info_req": "CommonGetCryptoInfoReq",
+  "cmd/common/get_crypto_info_rsp": "CommonGetCryptoInfoRsp",
+  "cmd/common/get_module_version_req": "CommonGetModuleVersionReq",
+  "cmd/common/get_module_version_rsp": "CommonGetModuleVersionRsp",
+  "cmd/common/get_parameter_req": "CommonGetParameterReq",
+  "cmd/common/get_parameter_rsp": "CommonGetParameterRsp",
+  "cmd/common/get_partition_size_req": "CommonGetPartitionSizeReq",
+  "cmd/common/get_partition_size_rsp": "CommonGetPartitionSizeRsp",
+  "cmd/common/get_version_req": "CommonGetVersionReq",
+  "cmd/common/get_version_rsp": "CommonGetVersionRsp",
+  "cmd/common/ping_req": "CommonPingReq",
+  "cmd/common/ping_rsp": "CommonPingRsp",
+  "cmd/common/set_parameter_req": "CommonSetParameterReq",
+  "cmd/common/set_parameter_rsp": "CommonSetParameterRsp",
+  "cmd/game/control_req": "GameControlReq",
+  "cmd/game/control_rsp": "GameControlRsp",
+  "cmd/game/player_input": "GamePlayerInput",
+  "cmd/gateway/analytics_event_receipt": "GatewayAnalyticsEventReceipt",
+  "cmd/hms/action_request": "HmsActionRequest",
+  "cmd/hms/action_response": "HmsActionResponse",
+  "cmd/led/ctrl_oneway": "LedCtrlOneway",
+  "cmd/log/with_metadata_req": "LogWithMetadataReq",
+  "cmd/mission/request": "MissionRequest",
+  "cmd/mission/request_ack": "MissionRequestAck",
+  "cmd/ota/upgrade_control_req": "OtaUpgradeControlReq",
+  "cmd/ota/upgrade_control_rsp": "OtaUpgradeControlRsp",
+  "cmd/parameter/query_req": "ParameterQueryReq",
+  "cmd/parameter/query_rsp": "ParameterQueryRsp",
+  "cmd/parameter/update_req": "ParameterUpdateReq",
+  "cmd/parameter/update_rsp": "ParameterUpdateRsp",
+  "cmd/pnl/mode_ctrl_req": "PnlModeCtrlReq",
+  "cmd/pnl/mode_ctrl_rsp": "PnlModeCtrlRsp",
+  "cmd/pnl/mode_query_req": "PnlModeQueryReq",
+  "cmd/pnl/mode_query_rsp": "PnlModeQueryRsp",
+  "cmd/rc/function_key_mode": "RcFunctionKeyMode",
+  "cmd/rc/function_key_mode_ack": "RcFunctionKeyModeAck",
+  "cmd/rc/joystick_calib_req": "RcJoystickCalibReq",
+  "cmd/rc/vibration_get_req": "RcVibrationGetReq",
+  "cmd/rc/vibration_get_rsp": "RcVibrationGetRsp",
+  "cmd/rc/vibration_set_req": "RcVibrationSetReq",
+  "cmd/rc/vibration_set_rsp": "RcVibrationSetRsp",
+  "cmd/real_rl/control_ack": "RealRlControlAck",
+  "cmd/real_rl/control_request": "RealRlControlRequest",
+  "cmd/robot/sn_req": "RobotSnReq",
+  "cmd/robot/sn_rsp": "RobotSnRsp",
+  "cmd/security/core_board_sn_req": "DeviceSecurityCoreBoardSnReq",
+  "cmd/security/core_board_sn_rsp": "DeviceSecurityCoreBoardSnRsp",
+  "cmd/security/device_activate_req": "DeviceSecurityDeviceActivateReq",
+  "cmd/security/device_activate_rsp": "DeviceSecurityDeviceActivateRsp",
+  "cmd/security/device_activation_state_req": "DeviceSecurityDeviceActivationStateReq",
+  "cmd/security/device_activation_state_rsp": "DeviceSecurityDeviceActivationStateRsp",
+  "cmd/security/device_attest_req": "DeviceSecurityDeviceAttestReq",
+  "cmd/security/device_attest_rsp": "DeviceSecurityDeviceAttestRsp",
+  "cmd/security/device_deactivate_req": "DeviceSecurityDeviceDeactivateReq",
+  "cmd/security/device_deactivate_rsp": "DeviceSecurityDeviceDeactivateRsp",
+  "cmd/security/e2e_provision_req": "DeviceSecurityE2eProvisionReq",
+  "cmd/security/e2e_provision_rsp": "DeviceSecurityE2eProvisionRsp",
+  "cmd/speaker/play_cmd": "SpeakerPlayCmd",
+  "cmd/speaker/play_rsp": "SpeakerPlayRsp",
+  "cmd/storage/op_req": "StorageOpReq",
+  "cmd/storage/op_rsp": "StorageOpRsp",
+  "cmd/system/factory_reset_req": "SystemFactoryResetReq",
+  "cmd/system/factory_reset_rsp": "SystemFactoryResetRsp",
+  "cmd/test/result": "TestResult",
+  "cmd/time/correction_req": "TimeCorrectionReq",
+  "cmd/time/correction_rsp": "TimeCorrectionRsp",
+  "cmd/tracking/algo_switch_cmd": "TrackingAlgoSwitchCmd",
+  "cmd/tracking/algo_switch_cmd_ack": "TrackingAlgoSwitchCmdAck",
+  "cmd/tracking/ctrl_cmd": "TrackingCtrlCmd",
+  "cmd/tracking/ctrl_cmd_ack": "TrackingCtrlCmdAck",
+  "cmd/tracking/model_switch_cmd": "TrackingModelSwitchCmd",
+  "cmd/tracking/model_switch_cmd_ack": "TrackingModelSwitchCmdAck",
+  "cmd/tracking/param_query_req": "TrackingParamQueryReq",
+  "cmd/tracking/param_query_rsp": "TrackingParamQueryRsp",
+  "cmd/tracking/param_update_req": "TrackingParamUpdateReq",
+  "cmd/tracking/param_update_rsp": "TrackingParamUpdateRsp",
+  "cmd/vt/disconn_req": "VtDisconnReq",
+  "cmd/vt/disconn_rsp": "VtDisconnRsp",
+  "cmd/vt/reset_conn_req": "VtResetConnReq",
+  "cmd/vt/reset_conn_rsp": "VtResetConnRsp",
+  "cmd/vt/set_mode_req": "VtSetModeReq",
+  "cmd/vt/set_mode_rsp": "VtSetModeRsp",
+  "cmd/camera/capture_controls_set_req": "CameraCaptureControlsSetReq",
+  "cmd/camera/capture_controls_set_rsp": "CameraCaptureControlsSetRsp",
+  "cmd/camera/pre_record_get_req": "CameraPreRecordGetReq",
+  "cmd/camera/pre_record_get_rsp": "CameraPreRecordGetRsp",
+  "cmd/camera/pre_record_set_req": "CameraPreRecordSetReq",
+  "cmd/camera/pre_record_set_rsp": "CameraPreRecordSetRsp",
+  "cmd/camera/record_req": "CameraRecordReq",
+  "cmd/camera/record_rsp": "CameraRecordRsp",
+  "cmd/camera/relative_trajectory_replay": "CameraRelativeTrajectoryReplay",
+  "cmd/camera/relative_trajectory_replay_catalog_query_req": "CameraRelativeTrajectoryReplayCatalogQueryReq",
+  "cmd/camera/relative_trajectory_replay_catalog_query_rsp": "CameraRelativeTrajectoryReplayCatalogQueryRsp",
+  "cmd/camera/relative_trajectory_replay_query_req": "CameraRelativeTrajectoryReplayQueryReq",
+  "cmd/camera/relative_trajectory_replay_query_rsp": "CameraRelativeTrajectoryReplayQueryRsp",
+  "cmd/camera/relative_trajectory_replay_upload_and_start_req": "CameraRelativeTrajectoryReplayUploadAndStartReq",
+  "cmd/camera/relative_trajectory_replay_upload_and_start_rsp": "CameraRelativeTrajectoryReplayUploadAndStartRsp",
+  "cmd/game/menu_get_req": "GameMenuGetReq",
+  "cmd/game/menu_get_rsp": "GameMenuGetRsp",
+  "cmd/game/menu_set_req": "GameMenuSetReq",
+  "cmd/game/menu_set_rsp": "GameMenuSetRsp",
+  "cmd/mic/forget_req": "MicForgetReq",
+  "cmd/mic/forget_rsp": "MicForgetRsp",
+  "cmd/mic/saved_list_req": "MicSavedListReq",
+  "cmd/mic/saved_list_rsp": "MicSavedListRsp",
+  "cmd/mic/scan_req": "MicScanReq",
+  "cmd/mic/scan_rsp": "MicScanRsp",
+  "cmd/mic/source_select_req": "MicSourceSelectReq",
+  "cmd/mic/source_select_rsp": "MicSourceSelectRsp",
+  "cmd/nm/wifi_connect_req": "NmWifiConnectReq",
+  "cmd/nm/wifi_connect_rsp": "NmWifiConnectRsp",
+  "cmd/nm/wifi_provision_commit_req": "NmWifiProvisionCommitReq",
+  "cmd/nm/wifi_provision_commit_rsp": "NmWifiProvisionCommitRsp",
+  "cmd/nm/wifi_provision_result_req": "NmWifiProvisionResultReq",
+  "cmd/nm/wifi_provision_result_rsp": "NmWifiProvisionResultRsp",
+  "cmd/nm/wifi_provision_start_req": "NmWifiProvisionStartReq",
+  "cmd/nm/wifi_provision_start_rsp": "NmWifiProvisionStartRsp",
+  "cmd/nm/wifi_scan_req": "NmWifiScanReq",
+  "cmd/nm/wifi_scan_rsp": "NmWifiScanRsp",
+  "cmd/security/local_tls_identity_req": "DeviceSecurityLocalTlsIdentityReq",
+  "cmd/security/local_tls_identity_rsp": "DeviceSecurityLocalTlsIdentityRsp",
+  "cmd/snapback/capture_control": "SnapbackCaptureControl",
+  "cmd/vt/req_iframe": "VtReqIframe",
+  "cmd/vt/set_bitrate_req": "VtSetBitrateReq",
+  "cmd/vt/set_fps_req": "VtSetFpsReq",
+  "cmd/vt/set_resolution_req": "VtSetResolutionReq",
+  "cmd/vt/status_req": "VtStatusReq",
+  "cmd/vt/status_rsp": "VtStatusRsp",
+  "data/tracking/target_data": "TrackingTargetData",
+  "status/camera/status": "CameraStatus",
+  "status/hms/active_snapshot": "HmsActiveSnapshot",
+  "status/hms/event_broadcast": "HmsEventBroadcast",
+  "status/hms/query_active": "HmsQueryActive",
+  "status/pmu/osd_status": "PmuOsdStatus",
+  "status/robot/status": "RobotStatus",
+  "status/scheduler/status": "SchedulerStatus",
+  "status/tracking/status": "TrackingStatus",
+  "cmd/nm/wifi_switch_to_ap_req": "NmWifiSwitchToApReq",
+  "cmd/nm/wifi_switch_to_station_req": "NmWifiSwitchToStationReq",
+  "cmd/nm/wifi_switch_to_station_rsp": "NmWifiSwitchToStationRsp",
+  "cmd/nm/wifi_switch_to_station_result_req": "NmWifiSwitchToStationResultReq",
+  "cmd/nm/wifi_switch_to_station_result_rsp": "NmWifiSwitchToStationResultRsp",
+  "status/nm/net_online_notify": "NmNetOnlineNotify",
+  "status/wifi": "WifiStatus"
+ },
+ "messages": {
+  "UwbRcStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<UwbRcStatusData>"
+   }
+  ],
+  "TugStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TugStatusData>"
+   }
+  ],
+  "TrackingStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingStatusData>"
+   }
+  ],
+  "StorageStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<StorageStatusData>"
+   }
+  ],
+  "SchedulerStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SchedulerStatusData>"
+   }
+  ],
+  "RobotStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RobotStatusData>"
+   }
+  ],
+  "RealRlStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RealRlStatusData>"
+   }
+  ],
+  "RcJoystickRaw": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcJoystickRawData>"
+   }
+  ],
+  "RcJoystickCalibProgress": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcJoystickCalibProgressData>"
+   }
+  ],
+  "RcFsmState": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcFsmStateData>"
+   }
+  ],
+  "PmuOsdStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<PmuOsdStatusData>"
+   }
+  ],
+  "OtaUpgradeProgress": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<OtaUpgradeProgressData>"
+   }
+  ],
+  "MediaCatalogChanged": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MediaCatalogChangedData>"
+   }
+  ],
+  "HmsQueryActive": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<HmsQueryActiveData>"
+   }
+  ],
+  "HmsEventBroadcast": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<HmsEventBroadcastData>"
+   }
+  ],
+  "HmsActiveSnapshot": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<HmsActiveSnapshotData>"
+   }
+  ],
+  "GatewayTrackingLost": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GatewayTrackingLostData>"
+   }
+  ],
+  "GatewayTelemetryEvent": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GatewayTelemetryEventData>"
+   }
+  ],
+  "GatewayAnalyticsEventTransfer": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GatewayAnalyticsEventTransferData>"
+   }
+  ],
+  "GameStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameStatusData>"
+   }
+  ],
+  "CommonAccessoryActivationReport": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryActivationReportData>"
+   }
+  ],
+  "CameraStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraStatusData>"
+   }
+  ],
+  "AudioStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioStatusData>"
+   }
+  ],
+  "VtPerfData": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtPerfDataData>"
+   }
+  ],
+  "TrackingTargetData": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingTargetDataData>"
+   }
+  ],
+  "RobotChaseGameParams": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RobotChaseGameParamsData>"
+   }
+  ],
+  "AudioPlaybackData": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioPlaybackDataData>"
+   }
+  ],
+  "VtSetModeRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtSetModeRspData>"
+   }
+  ],
+  "VtSetModeReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtSetModeReqData>"
+   }
+  ],
+  "VtResetConnRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtResetConnRspData>"
+   }
+  ],
+  "VtResetConnReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtResetConnReqData>"
+   }
+  ],
+  "VtDisconnRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtDisconnRspData>"
+   }
+  ],
+  "VtDisconnReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtDisconnReqData>"
+   }
+  ],
+  "TrackingParamUpdateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingParamUpdateRspData>"
+   }
+  ],
+  "TrackingParamUpdateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingParamUpdateReqData>"
+   }
+  ],
+  "TrackingParamQueryRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingParamQueryRspData>"
+   }
+  ],
+  "TrackingParamQueryReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingParamQueryReqData>"
+   }
+  ],
+  "TrackingModelSwitchCmdAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingModelSwitchCmdAckData>"
+   }
+  ],
+  "TrackingModelSwitchCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingModelSwitchCmdData>"
+   }
+  ],
+  "TrackingCtrlCmdAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingCtrlCmdAckData>"
+   }
+  ],
+  "TrackingCtrlCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingCtrlCmdData>"
+   }
+  ],
+  "TrackingAlgoSwitchCmdAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingAlgoSwitchCmdAckData>"
+   }
+  ],
+  "TrackingAlgoSwitchCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TrackingAlgoSwitchCmdData>"
+   }
+  ],
+  "TimeCorrectionRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TimeCorrectionRspData>"
+   }
+  ],
+  "TimeCorrectionReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TimeCorrectionReqData>"
+   }
+  ],
+  "TestResult": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<TestResultData>"
+   }
+  ],
+  "SystemFactoryResetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SystemFactoryResetRspData>"
+   }
+  ],
+  "SystemFactoryResetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SystemFactoryResetReqData>"
+   }
+  ],
+  "StorageOpRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<StorageOpRspData>"
+   }
+  ],
+  "StorageOpReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<StorageOpReqData>"
+   }
+  ],
+  "SpeakerPlayRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SpeakerPlayRspData>"
+   }
+  ],
+  "SpeakerPlayCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SpeakerPlayCmdData>"
+   }
+  ],
+  "RobotSnRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RobotSnRspData>"
+   }
+  ],
+  "RobotSnReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RobotSnReqData>"
+   }
+  ],
+  "RealRlControlRequest": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RealRlControlRequestData>"
+   }
+  ],
+  "RealRlControlAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RealRlControlAckData>"
+   }
+  ],
+  "RcVibrationSetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcVibrationSetRspData>"
+   }
+  ],
+  "RcVibrationSetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcVibrationSetReqData>"
+   }
+  ],
+  "RcVibrationGetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcVibrationGetRspData>"
+   }
+  ],
+  "RcVibrationGetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcVibrationGetReqData>"
+   }
+  ],
+  "RcJoystickCalibReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcJoystickCalibReqData>"
+   }
+  ],
+  "RcFunctionKeyModeAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcFunctionKeyModeAckData>"
+   }
+  ],
+  "RcFunctionKeyMode": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<RcFunctionKeyModeData>"
+   }
+  ],
+  "PnlModeQueryRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<PnlModeQueryRspData>"
+   }
+  ],
+  "PnlModeQueryReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<PnlModeQueryReqData>"
+   }
+  ],
+  "PnlModeCtrlRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<PnlModeCtrlRspData>"
+   }
+  ],
+  "PnlModeCtrlReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<PnlModeCtrlReqData>"
+   }
+  ],
+  "ParameterUpdateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<ParameterUpdateRspData>"
+   }
+  ],
+  "ParameterUpdateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<ParameterUpdateReqData>"
+   }
+  ],
+  "ParameterQueryRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<ParameterQueryRspData>"
+   }
+  ],
+  "ParameterQueryReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<ParameterQueryReqData>"
+   }
+  ],
+  "OtaUpgradeControlRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<OtaUpgradeControlRspData>"
+   }
+  ],
+  "OtaUpgradeControlReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<OtaUpgradeControlReqData>"
+   }
+  ],
+  "MissionRequestAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MissionRequestAckData>"
+   }
+  ],
+  "MissionRequest": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MissionRequestData>"
+   }
+  ],
+  "LogWithMetadataReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<LogWithMetadataReqData>"
+   }
+  ],
+  "LedCtrlOneway": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<LedCtrlOnewayData>"
+   }
+  ],
+  "HmsActionResponse": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<HmsActionResponseData>"
+   }
+  ],
+  "HmsActionRequest": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<HmsActionRequestData>"
+   }
+  ],
+  "GatewayAnalyticsEventReceipt": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GatewayAnalyticsEventReceiptData>"
+   }
+  ],
+  "GamePlayerInput": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GamePlayerInputData>"
+   }
+  ],
+  "GameControlRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameControlRspData>"
+   }
+  ],
+  "GameControlReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameControlReqData>"
+   }
+  ],
+  "DeviceSecurityE2eProvisionRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityE2eProvisionRspData>"
+   }
+  ],
+  "DeviceSecurityE2eProvisionReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityE2eProvisionReqData>"
+   }
+  ],
+  "DeviceSecurityDeviceDeactivateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceDeactivateRspData>"
+   }
+  ],
+  "DeviceSecurityDeviceDeactivateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceDeactivateReqData>"
+   }
+  ],
+  "DeviceSecurityDeviceAttestRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceAttestRspData>"
+   }
+  ],
+  "DeviceSecurityDeviceAttestReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceAttestReqData>"
+   }
+  ],
+  "DeviceSecurityDeviceActivationStateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceActivationStateRspData>"
+   }
+  ],
+  "DeviceSecurityDeviceActivationStateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceActivationStateReqData>"
+   }
+  ],
+  "DeviceSecurityDeviceActivateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceActivateRspData>"
+   }
+  ],
+  "DeviceSecurityDeviceActivateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityDeviceActivateReqData>"
+   }
+  ],
+  "DeviceSecurityCoreBoardSnRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityCoreBoardSnRspData>"
+   }
+  ],
+  "DeviceSecurityCoreBoardSnReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityCoreBoardSnReqData>"
+   }
+  ],
+  "CommonSetParameterRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonSetParameterRspData>"
+   }
+  ],
+  "CommonSetParameterReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonSetParameterReqData>"
+   }
+  ],
+  "CommonPingRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonPingRspData>"
+   }
+  ],
+  "CommonPingReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonPingReqData>"
+   }
+  ],
+  "CommonGetVersionRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetVersionRspData>"
+   }
+  ],
+  "CommonGetVersionReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetVersionReqData>"
+   }
+  ],
+  "CommonGetPartitionSizeRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetPartitionSizeRspData>"
+   }
+  ],
+  "CommonGetPartitionSizeReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetPartitionSizeReqData>"
+   }
+  ],
+  "CommonGetParameterRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetParameterRspData>"
+   }
+  ],
+  "CommonGetParameterReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetParameterReqData>"
+   }
+  ],
+  "CommonGetModuleVersionRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetModuleVersionRspData>"
+   }
+  ],
+  "CommonGetModuleVersionReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetModuleVersionReqData>"
+   }
+  ],
+  "CommonGetCryptoInfoRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetCryptoInfoRspData>"
+   }
+  ],
+  "CommonGetCryptoInfoReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonGetCryptoInfoReqData>"
+   }
+  ],
+  "CommonAccessoryListRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryListRspData>"
+   }
+  ],
+  "CommonAccessoryListReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryListReqData>"
+   }
+  ],
+  "CommonAccessoryDeactivateRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryDeactivateRspData>"
+   }
+  ],
+  "CommonAccessoryDeactivateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryDeactivateReqData>"
+   }
+  ],
+  "CommonAccessoryControlRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryControlRspData>"
+   }
+  ],
+  "CommonAccessoryControlReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryControlReqData>"
+   }
+  ],
+  "CommonAccessoryActivationReportAck": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CommonAccessoryActivationReportAckData>"
+   }
+  ],
+  "CapabilitySoftwareSnapshotRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CapabilitySoftwareSnapshotRspData>"
+   }
+  ],
+  "CapabilitySoftwareSnapshotReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CapabilitySoftwareSnapshotReqData>"
+   }
+  ],
+  "CapabilityHardwareSnapshotRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CapabilityHardwareSnapshotRspData>"
+   }
+  ],
+  "CapabilityHardwareSnapshotReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CapabilityHardwareSnapshotReqData>"
+   }
+  ],
+  "CameraUnifiedCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraUnifiedCmdData>"
+   }
+  ],
+  "CameraConfigSwitchCmd": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraConfigSwitchCmdData>"
+   }
+  ],
+  "AudioPlayFileRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioPlayFileRspData>"
+   }
+  ],
+  "AudioPlayFileReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioPlayFileReqData>"
+   }
+  ],
+  "AudioOpRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioOpRspData>"
+   }
+  ],
+  "AudioOpReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<AudioOpReqData>"
+   }
+  ],
+  "UwbRcStatusData": [
+   {
+    "tag": 1,
+    "name": "battery",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "rssi",
+    "wire": "sint32"
+   }
+  ],
+  "TugStatusData": [
+   {
+    "tag": 1,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "sessionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "p1Force",
+    "wire": "float"
+   },
+   {
+    "tag": 4,
+    "name": "p2Force",
+    "wire": "float"
+   },
+   {
+    "tag": 5,
+    "name": "ropePosition",
+    "wire": "float"
+   },
+   {
+    "tag": 6,
+    "name": "ropeVelocity",
+    "wire": "float"
+   },
+   {
+    "tag": 7,
+    "name": "p1DistanceM",
+    "wire": "float"
+   },
+   {
+    "tag": 8,
+    "name": "p2DistanceM",
+    "wire": "float"
+   },
+   {
+    "tag": 9,
+    "name": "countdownRemainingMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "onlineMask",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "schemaVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "p1Source",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "p2Source",
+    "wire": "uint32"
+   },
+   {
+    "tag": 14,
+    "name": "rosterType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 15,
+    "name": "resultLevel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 16,
+    "name": "terminationReason",
+    "wire": "uint32"
+   },
+   {
+    "tag": 17,
+    "name": "warmupProgress",
+    "wire": "uint32"
+   },
+   {
+    "tag": 18,
+    "name": "warmupActiveMask",
+    "wire": "uint32"
+   },
+   {
+    "tag": 19,
+    "name": "capabilityFlags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 20,
+    "name": "configVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 21,
+    "name": "referencePositionM",
+    "wire": "float"
+   },
+   {
+    "tag": 22,
+    "name": "actualPositionM",
+    "wire": "float"
+   },
+   {
+    "tag": 23,
+    "name": "targetVelocityMps",
+    "wire": "float"
+   },
+   {
+    "tag": 24,
+    "name": "actualVelocityMps",
+    "wire": "float"
+   },
+   {
+    "tag": 25,
+    "name": "refereeBaselinePlayer",
+    "wire": "uint32"
+   },
+   {
+    "tag": 26,
+    "name": "refereePromptPlayer",
+    "wire": "uint32"
+   },
+   {
+    "tag": 27,
+    "name": "refereePromptAction",
+    "wire": "uint32"
+   },
+   {
+    "tag": 28,
+    "name": "matchEndpointM",
+    "wire": "float"
+   },
+   {
+    "tag": 29,
+    "name": "guidanceStepM",
+    "wire": "float"
+   },
+   {
+    "tag": 30,
+    "name": "inputQuality",
+    "wire": "bytes"
+   }
+  ],
+  "TrackingStatusData": [
+   {
+    "tag": 1,
+    "name": "status",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "trackingId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "targetType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "horizontalDis",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "horizontalSpeed",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "uwbFollowEnabled",
+    "wire": "uint32"
+   }
+  ],
+  "StorageStatusData": [
+   {
+    "tag": 1,
+    "name": "internalUsedSpace",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "internalTotalSpace",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "sdUsedSpace",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "sdTotalSpace",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "storageType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "sdStatus",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "sdTransferSpeed",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "sdFsType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "internalThresholdAlert",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "sdThresholdAlert",
+    "wire": "uint32"
+   }
+  ],
+  "SchedulerStatusData": [
+   {
+    "tag": 1,
+    "name": "currentMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "subMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "requestSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "isLocked",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "isPaused",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 7,
+    "name": "subModeState",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "egoActive",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "obstacleAvoidanceFlags",
+    "wire": "uint32"
+   }
+  ],
+  "RobotStatusData": [
+   {
+    "tag": 1,
+    "name": "robotState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "velocity",
+    "wire": "sint32"
+   },
+   {
+    "tag": 3,
+    "name": "tripOdomDis",
+    "wire": "float"
+   },
+   {
+    "tag": 4,
+    "name": "obstacleDis",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "pitchAngle",
+    "wire": "sint32"
+   },
+   {
+    "tag": 6,
+    "name": "gimbalAngle",
+    "wire": "sint32"
+   },
+   {
+    "tag": 7,
+    "name": "rollAngle",
+    "wire": "sint32"
+   },
+   {
+    "tag": 8,
+    "name": "height",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "sportMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "abnormalFlags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "sessionOdomDis",
+    "wire": "float"
+   }
+  ],
+  "RealRlStatusData": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "supported",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "controlSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "requestedInferenceMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "activeInferenceMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "rolloutRecordingRequested",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "rolloutRecordingActive",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "runtimeState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "modelReady",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "collectorReady",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "collectorFault",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "sessionActive",
+    "wire": "uint32"
+   },
+   {
+    "tag": 14,
+    "name": "episodeActive",
+    "wire": "uint32"
+   },
+   {
+    "tag": 15,
+    "name": "lastRequestSeqNum",
+    "wire": "uint32"
+   },
+   {
+    "tag": 16,
+    "name": "recordingRemainingMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 17,
+    "name": "sessionId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 18,
+    "name": "episodeId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 19,
+    "name": "writtenRecordCount",
+    "wire": "uint64"
+   },
+   {
+    "tag": 20,
+    "name": "pendingRecordCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 21,
+    "name": "droppedRecordCount",
+    "wire": "uint64"
+   },
+   {
+    "tag": 22,
+    "name": "completedFragmentCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 23,
+    "name": "lastRecordTimestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 24,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 25,
+    "name": "inferenceActive",
+    "wire": "uint32"
+   },
+   {
+    "tag": 26,
+    "name": "lastClientSessionId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 27,
+    "name": "statusStale",
+    "wire": "uint32"
+   },
+   {
+    "tag": 28,
+    "name": "runtimeStatusAgeMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 31,
+    "name": "requestedExplorationScale",
+    "wire": "float"
+   },
+   {
+    "tag": 32,
+    "name": "activeExplorationScale",
+    "wire": "float"
+   }
+  ],
+  "RcJoystickRawData": [
+   {
+    "tag": 1,
+    "name": "x",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "y",
+    "wire": "uint32"
+   }
+  ],
+  "RcJoystickCalibProgressData": [
+   {
+    "tag": 1,
+    "name": "status",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "progress",
+    "wire": "uint32"
+   }
+  ],
+  "RcFsmStateData": [
+   {
+    "tag": 1,
+    "name": "timestampMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "prevState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "prevSub",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "keyId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "eventType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "nextState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "nextSub",
+    "wire": "uint32"
+   }
+  ],
+  "PmuOsdStatusData": [
+   {
+    "tag": 1,
+    "name": "soc",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "powerBits",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "abnormalFlags",
+    "wire": "uint32"
+   }
+  ],
+  "OtaUpgradeProgressData": [
+   {
+    "tag": 1,
+    "name": "returnCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "upgradeStage",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "progressPercent",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "currentBytes",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "totalBytes",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "MediaCatalogChangedData": [
+   {
+    "tag": 1,
+    "name": "revision",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "storageKind",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "changeReason",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "mountGeneration",
+    "wire": "uint64"
+   }
+  ],
+  "HmsQueryActiveData": [
+   {
+    "tag": 1,
+    "name": "filterKind",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "pad0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "moduleId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "requestId",
+    "wire": "uint64"
+   }
+  ],
+  "HmsEventBroadcastData": [
+   {
+    "tag": 1,
+    "name": "offset",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "moduleId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "faultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "instanceId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "kind",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "severity",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "timestampMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 8,
+    "name": "daemonInstanceId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 9,
+    "name": "stateRevision",
+    "wire": "uint64"
+   },
+   {
+    "tag": 10,
+    "name": "origin",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "recoveryState",
+    "wire": "uint32"
+   }
+  ],
+  "HmsActiveSnapshotData": [
+   {
+    "tag": 1,
+    "name": "atOffset",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "count",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "moduleIds",
+    "wire": "repeated uint32"
+   },
+   {
+    "tag": 4,
+    "name": "faultCodes",
+    "wire": "repeated uint32"
+   },
+   {
+    "tag": 5,
+    "name": "instanceIds",
+    "wire": "repeated uint32"
+   },
+   {
+    "tag": 6,
+    "name": "severities",
+    "wire": "repeated uint32"
+   },
+   {
+    "tag": 7,
+    "name": "firstAssertTs",
+    "wire": "repeated uint64"
+   },
+   {
+    "tag": 8,
+    "name": "lastUpdateTs",
+    "wire": "repeated uint64"
+   },
+   {
+    "tag": 9,
+    "name": "daemonInstanceId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 10,
+    "name": "stateRevision",
+    "wire": "uint64"
+   },
+   {
+    "tag": 11,
+    "name": "recoveryState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "requestId",
+    "wire": "uint64"
+   }
+  ],
+  "GatewayTrackingLostData": [
+   {
+    "tag": 1,
+    "name": "eventId",
+    "wire": "repeated sint32"
+   },
+   {
+    "tag": 2,
+    "name": "triggeredAtMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "subReason",
+    "wire": "uint32"
+   }
+  ],
+  "GatewayTelemetryEventData": [
+   {
+    "tag": 1,
+    "name": "eventId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "eventType",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "source",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "category",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "message",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "severity",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "triggerLogUpload",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "reserved",
+    "wire": "bytes"
+   },
+   {
+    "tag": 9,
+    "name": "payloadCount",
+    "wire": "uint32"
+   }
+  ],
+  "GatewayAnalyticsEventTransferData": [
+   {
+    "tag": 1,
+    "name": "deliveryId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "occurredAtMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "eventId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "producer",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "count",
+    "wire": "uint64"
+   },
+   {
+    "tag": 6,
+    "name": "attributesJsonLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "attributesJson",
+    "wire": "bytes"
+   }
+  ],
+  "GameStatusData": [
+   {
+    "tag": 1,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "gameType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "state",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "subState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "playerCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "sessionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "elapsedMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "remainingMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "progress",
+    "wire": "float"
+   },
+   {
+    "tag": 10,
+    "name": "winner",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "pauseReason",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "recordHint",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "errorCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 14,
+    "name": "playerState",
+    "wire": "bytes"
+   },
+   {
+    "tag": 15,
+    "name": "score",
+    "wire": "repeated float"
+   },
+   {
+    "tag": 16,
+    "name": "flags",
+    "wire": "uint32"
+   }
+  ],
+  "CommonAccessoryActivationReportData": [
+   {
+    "tag": 1,
+    "name": "actTimeMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "seq",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "accType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "snLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "sn",
+    "wire": "bytes"
+   }
+  ],
+  "CameraStatusData": [
+   {
+    "tag": 1,
+    "name": "recState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "curRecWidth",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "curRecHeight",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "curRecBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "curSnapWidth",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "curSnapHeight",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "cameraWidth",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "cameraHeight",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "recFrameRate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "vtWidth",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "vtHeight",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "vtFrameRate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "vtBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 14,
+    "name": "eisStatus",
+    "wire": "uint32"
+   },
+   {
+    "tag": 15,
+    "name": "proShutterIdx",
+    "wire": "uint32"
+   },
+   {
+    "tag": 16,
+    "name": "proIsoIdx",
+    "wire": "uint32"
+   },
+   {
+    "tag": 17,
+    "name": "proEvIdx",
+    "wire": "uint32"
+   },
+   {
+    "tag": 18,
+    "name": "proWbIdx",
+    "wire": "uint32"
+   },
+   {
+    "tag": 19,
+    "name": "recDurationS",
+    "wire": "uint32"
+   },
+   {
+    "tag": 20,
+    "name": "zoomData",
+    "wire": "uint32"
+   },
+   {
+    "tag": 21,
+    "name": "currentMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 22,
+    "name": "currentPreset",
+    "wire": "uint32"
+   },
+   {
+    "tag": 23,
+    "name": "curLux",
+    "wire": "uint32"
+   },
+   {
+    "tag": 24,
+    "name": "luxLevel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 25,
+    "name": "currentProfileId",
+    "wire": "uint32"
+   }
+  ],
+  "AudioStatusData": [
+   {
+    "tag": 1,
+    "name": "recordEnabled",
+    "wire": "uint32"
+   }
+  ],
+  "VtPerfDataData": [
+   {
+    "tag": 1,
+    "name": "ucpConn",
+    "wire": "sint32"
+   },
+   {
+    "tag": 2,
+    "name": "wifiConn",
+    "wire": "sint32"
+   },
+   {
+    "tag": 3,
+    "name": "rssi",
+    "wire": "sint32"
+   },
+   {
+    "tag": 4,
+    "name": "resv",
+    "wire": "sint32"
+   },
+   {
+    "tag": 5,
+    "name": "txBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "rxBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "txThroughput",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "rxThroughput",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "videoDelay",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "hbPs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "fps",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "videoTransMode",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingTargetDataData": [
+   {
+    "tag": 1,
+    "name": "targetCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "targets",
+    "wire": "repeated message<TrackingTargetInfo>"
+   }
+  ],
+  "RobotChaseGameParamsData": [
+   {
+    "tag": 1,
+    "name": "iceBreakDistance",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "chaseDistance",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "speedSetting",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "turnTimeMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "turnTransitionMs",
+    "wire": "uint32"
+   }
+  ],
+  "AudioPlaybackDataData": [
+   {
+    "tag": 1,
+    "name": "encodingType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "sampleRate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "channels",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "frameDurationMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "timestamp",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "seqNumAudio",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "dataSize",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "data",
+    "wire": "bytes"
+   }
+  ],
+  "WireHeader": [
+   {
+    "tag": 1,
+    "name": "seqNum",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "timestamp",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "version",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingTargetInfo": [
+   {
+    "tag": 1,
+    "name": "id",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "centerPosX",
+    "wire": "float"
+   },
+   {
+    "tag": 3,
+    "name": "centerPosY",
+    "wire": "float"
+   },
+   {
+    "tag": 4,
+    "name": "width",
+    "wire": "float"
+   },
+   {
+    "tag": 5,
+    "name": "height",
+    "wire": "float"
+   },
+   {
+    "tag": 6,
+    "name": "targetState",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "reservedStateFlags",
+    "wire": "uint32"
+   }
+  ],
+  "TelemetryKvPair": [
+   {
+    "tag": 1,
+    "name": "key",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "value",
+    "wire": "bytes"
+   }
+  ],
+  "OtaUpgradeTaskResult": [
+   {
+    "tag": 1,
+    "name": "protocolVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "upgradeId",
+    "wire": "string"
+   },
+   {
+    "tag": 3,
+    "name": "deviceId",
+    "wire": "string"
+   },
+   {
+    "tag": 4,
+    "name": "state",
+    "wire": "string"
+   },
+   {
+    "tag": 5,
+    "name": "uploadGrantToken",
+    "wire": "string"
+   },
+   {
+    "tag": 6,
+    "name": "offset",
+    "wire": "uint64"
+   },
+   {
+    "tag": 7,
+    "name": "revision",
+    "wire": "uint64"
+   },
+   {
+    "tag": 8,
+    "name": "errorCode",
+    "wire": "string"
+   }
+  ],
+  "OtaUpgradeTaskObservation": [
+   {
+    "tag": 1,
+    "name": "runtimeId",
+    "wire": "string"
+   },
+   {
+    "tag": 2,
+    "name": "active",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "progressPercent",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "lastUpgradeId",
+    "wire": "string"
+   },
+   {
+    "tag": 5,
+    "name": "lastState",
+    "wire": "string"
+   },
+   {
+    "tag": 6,
+    "name": "lastErrorCode",
+    "wire": "string"
+   },
+   {
+    "tag": 7,
+    "name": "lastRevision",
+    "wire": "uint64"
+   },
+   {
+    "tag": 8,
+    "name": "completedAt",
+    "wire": "uint64"
+   }
+  ],
+  "OtaUpgradeTaskContext": [
+   {
+    "tag": 1,
+    "name": "protocolVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "upgradeId",
+    "wire": "string"
+   },
+   {
+    "tag": 3,
+    "name": "deviceId",
+    "wire": "string"
+   },
+   {
+    "tag": 5,
+    "name": "sha256",
+    "wire": "string"
+   },
+   {
+    "tag": 6,
+    "name": "size",
+    "wire": "uint64"
+   },
+   {
+    "tag": 7,
+    "name": "version",
+    "wire": "string"
+   },
+   {
+    "tag": 8,
+    "name": "originalFilename",
+    "wire": "string"
+   }
+  ],
+  "Fraction": [
+   {
+    "tag": 1,
+    "name": "numerator",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "denominator",
+    "wire": "uint32"
+   }
+  ],
+  "CameraRecordProfilesData": [
+   {
+    "name": "profiles",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRecordProfilesCapability": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRecordProfilesData>"
+   }
+  ],
+  "CameraRecordProfile": [
+   {
+    "tag": 1,
+    "name": "profileId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resolutionText",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "fps",
+    "wire": "message<Fraction>"
+   },
+   {
+    "tag": 4,
+    "name": "aspectRatio",
+    "wire": "message<Fraction>"
+   }
+  ],
+  "AnalyticsDeliveryId": [
+   {
+    "tag": 1,
+    "name": "deliveryId",
+    "wire": "bytes"
+   }
+  ],
+  "VtSetModeRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "VtSetModeReqData": [
+   {
+    "tag": 1,
+    "name": "mode",
+    "wire": "uint32"
+   }
+  ],
+  "VtReqIframe": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtReqIframeData>"
+   }
+  ],
+  "VtReqIframeData": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "VtSetBitrateReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtSetBitrateReqData>"
+   }
+  ],
+  "VtSetBitrateReqData": [
+   {
+    "tag": 1,
+    "name": "bitrate",
+    "wire": "uint32"
+   }
+  ],
+  "VtSetFpsReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtSetFpsReqData>"
+   }
+  ],
+  "VtSetFpsReqData": [
+   {
+    "tag": 1,
+    "name": "fps",
+    "wire": "uint32"
+   }
+  ],
+  "VtSetResolutionReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtSetResolutionReqData>"
+   }
+  ],
+  "VtSetResolutionReqData": [
+   {
+    "tag": 1,
+    "name": "resolution",
+    "wire": "uint32"
+   }
+  ],
+  "VtStatusReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtStatusReqData>"
+   }
+  ],
+  "VtStatusReqData": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "VtStatusRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<VtStatusRspData>"
+   }
+  ],
+  "VtStatusRspData": [
+   {
+    "tag": 1,
+    "name": "ready",
+    "wire": "sint32"
+   },
+   {
+    "tag": 2,
+    "name": "targetFps",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "targetKbps",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "restart",
+    "wire": "sint32"
+   },
+   {
+    "tag": 5,
+    "name": "targetResolution",
+    "wire": "uint32"
+   }
+  ],
+  "VtResetConnRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "VtResetConnReqData": [],
+  "VtDisconnRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "VtDisconnReqData": [],
+  "TrackingParamUpdateRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "TrackingParamUpdateReqData": [
+   {
+    "tag": 1,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "paramValue",
+    "wire": "float"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "TrackingParamQueryRspData": [
+   {
+    "tag": 1,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "paramValue",
+    "wire": "float"
+   }
+  ],
+  "TrackingParamQueryReqData": [
+   {
+    "tag": 1,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "TrackingModelSwitchCmdAckData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentTargetType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved1",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingModelSwitchCmdData": [
+   {
+    "tag": 1,
+    "name": "targetType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved2",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingCtrlCmdAckData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "selectedId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "startTracking",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingCtrlCmdData": [
+   {
+    "tag": 1,
+    "name": "selectedId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "startTracking",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "selectedPosX",
+    "wire": "float"
+   },
+   {
+    "tag": 4,
+    "name": "selectedPosY",
+    "wire": "float"
+   },
+   {
+    "tag": 5,
+    "name": "requestMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "reserved2",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "reserved3",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingAlgoSwitchCmdAckData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentModelVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved1",
+    "wire": "uint32"
+   }
+  ],
+  "TrackingAlgoSwitchCmdData": [
+   {
+    "tag": 1,
+    "name": "modelVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved0",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved2",
+    "wire": "uint32"
+   }
+  ],
+  "TimeCorrectionRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "TimeCorrectionReqData": [
+   {
+    "tag": 1,
+    "name": "timestamp",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "offset",
+    "wire": "uint32"
+   }
+  ],
+  "TestResultData": [
+   {
+    "tag": 1,
+    "name": "testType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "timestampMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 5,
+    "name": "sessionId",
+    "wire": "bytes"
+   }
+  ],
+  "SystemFactoryResetRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "SystemFactoryResetReqData": [],
+  "StorageOpRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "StorageOpReqData": [
+   {
+    "tag": 1,
+    "name": "operationType",
+    "wire": "uint32"
+   }
+  ],
+  "SpeakerPlayRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "SpeakerPlayCmdData": [
+   {
+    "tag": 1,
+    "name": "soundEffectId",
+    "wire": "uint32"
+   }
+  ],
+  "RobotSnRspData": [
+   {
+    "tag": 1,
+    "name": "snType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "lens",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "sn",
+    "wire": "bytes"
+   }
+  ],
+  "RobotSnReqData": [
+   {
+    "tag": 1,
+    "name": "snType",
+    "wire": "uint32"
+   }
+  ],
+  "RealRlControlRequestData": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "inferenceMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "rolloutRecordingRequested",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "recordingDurationMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "clientSessionId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 6,
+    "name": "explorationScale",
+    "wire": "float"
+   }
+  ],
+  "RealRlControlAckData": [
+   {
+    "tag": 1,
+    "name": "resultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestedInferenceMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "rolloutRecordingRequested",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "controlSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "recordingDurationMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "clientSessionId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 7,
+    "name": "requestedExplorationScale",
+    "wire": "float"
+   }
+  ],
+  "RcVibrationSetRspData": [
+   {
+    "tag": 1,
+    "name": "level",
+    "wire": "uint32"
+   }
+  ],
+  "RcVibrationSetReqData": [
+   {
+    "tag": 1,
+    "name": "level",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "receiverType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "receiverIndex",
+    "wire": "uint32"
+   }
+  ],
+  "RcVibrationGetRspData": [
+   {
+    "tag": 1,
+    "name": "level",
+    "wire": "uint32"
+   }
+  ],
+  "RcVibrationGetReqData": [
+   {
+    "tag": 1,
+    "name": "receiverType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "receiverIndex",
+    "wire": "uint32"
+   }
+  ],
+  "RcJoystickCalibReqData": [
+   {
+    "tag": 1,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "receiverType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "receiverIndex",
+    "wire": "uint32"
+   }
+  ],
+  "RcFunctionKeyModeAckData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "RcFunctionKeyModeData": [
+   {
+    "tag": 1,
+    "name": "cameraBtnMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "gameBtnMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "updateFlag",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   }
+  ],
+  "PnlModeQueryRspData": [
+   {
+    "tag": 1,
+    "name": "resultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentPnlMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved2",
+    "wire": "uint32"
+   }
+  ],
+  "PnlModeQueryReqData": [
+   {
+    "tag": 1,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved2",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved3",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved4",
+    "wire": "uint32"
+   }
+  ],
+  "PnlModeCtrlRspData": [
+   {
+    "tag": 1,
+    "name": "resultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "previousPnlMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "currentPnlMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   }
+  ],
+  "PnlModeCtrlReqData": [
+   {
+    "tag": 1,
+    "name": "pnlMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved2",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved3",
+    "wire": "uint32"
+   }
+  ],
+  "ParameterUpdateRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "ParameterUpdateReqData": [
+   {
+    "tag": 1,
+    "name": "modeType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "paramValue",
+    "wire": "float"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "ParameterQueryRspData": [
+   {
+    "tag": 1,
+    "name": "modeType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "paramValue",
+    "wire": "float"
+   }
+  ],
+  "ParameterQueryReqData": [
+   {
+    "tag": 1,
+    "name": "modeType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "paramId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "OtaUpgradeControlRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentUpgradeStage",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "task",
+    "wire": "message<OtaUpgradeTaskResult>"
+   },
+   {
+    "tag": 5,
+    "name": "taskContext",
+    "wire": "message<OtaUpgradeTaskContext>"
+   },
+   {
+    "tag": 6,
+    "name": "taskLegacy",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "taskObservation",
+    "wire": "message<OtaUpgradeTaskObservation>"
+   }
+  ],
+  "OtaUpgradeControlReqData": [
+   {
+    "tag": 1,
+    "name": "controlCmd",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "versionField1",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "versionField2",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "reserved",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "task",
+    "wire": "message<OtaUpgradeTaskContext>"
+   }
+  ],
+  "MissionRequestAckData": [
+   {
+    "tag": 1,
+    "name": "resultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentMissionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "currentSubMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "errorCodeLo",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "errorCodeHi",
+    "wire": "uint32"
+   }
+  ],
+  "MissionRequestData": [
+   {
+    "tag": 1,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "missionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "subMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "modeParams",
+    "wire": "bytes"
+   }
+  ],
+  "LogWithMetadataReqData": [
+   {
+    "tag": 1,
+    "name": "id",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "timestamp",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "length",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "buf",
+    "wire": "bytes"
+   }
+  ],
+  "LedCtrlOnewayData": [
+   {
+    "tag": 1,
+    "name": "seq",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "timestampUs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "rgbwData",
+    "wire": "repeated uint32"
+   }
+  ],
+  "HmsActionResponseData": [
+   {
+    "tag": 1,
+    "name": "commandId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "actionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "dispatcherInstanceId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 5,
+    "name": "deliveryStoreId",
+    "wire": "bytes"
+   }
+  ],
+  "HmsActionRequestData": [
+   {
+    "tag": 1,
+    "name": "commandId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "sourceEventOffset",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "sourceFaultCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "actionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "executionTimeoutMs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "instanceId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "operation",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "sourceSeverity",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "sourceDaemonInstanceId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 10,
+    "name": "dispatcherInstanceId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 11,
+    "name": "durability",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "deliveryStoreId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 13,
+    "name": "sourceBootId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 14,
+    "name": "sourceMonotonicNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 15,
+    "name": "occurredAtMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 16,
+    "name": "contextFlags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 17,
+    "name": "contextVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 18,
+    "name": "contextSize",
+    "wire": "uint32"
+   },
+   {
+    "tag": 19,
+    "name": "context",
+    "wire": "bytes"
+   }
+  ],
+  "GatewayAnalyticsEventReceiptData": [
+   {
+    "tag": 1,
+    "name": "acceptedCount",
+    "wire": "uint32"
+   },
+   {
+    "name": "acceptedDeliveryIds",
+    "wire": "unknown"
+   }
+  ],
+  "GamePlayerInputData": [
+   {
+    "tag": 1,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "gameType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "playerSlot",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "source",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "flags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "profileId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "sessionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "seq",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "samplePeriodUs",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "accG",
+    "wire": "repeated float"
+   },
+   {
+    "tag": 12,
+    "name": "gyroDps",
+    "wire": "repeated float"
+   },
+   {
+    "tag": 13,
+    "name": "attitudeDeg",
+    "wire": "repeated float"
+   }
+  ],
+  "GameControlRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "subRetCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 4,
+    "name": "gameType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "sessionId",
+    "wire": "uint32"
+   }
+  ],
+  "GameControlReqData": [
+   {
+    "tag": 1,
+    "name": "timestampNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "version",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "gameType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "flags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "sessionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "paramHash",
+    "wire": "uint32"
+   }
+  ],
+  "DeviceSecurityE2eProvisionRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "devicePublicKey",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "bindingSalt",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "pairingCredential",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "cloudSharedKey",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityE2eProvisionReqData": [
+   {
+    "tag": 1,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "challenge",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityDeviceDeactivateRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "state",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "stateChangedAt",
+    "wire": "uint64"
+   }
+  ],
+  "DeviceSecurityDeviceDeactivateReqData": [
+   {
+    "tag": 1,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "deactivatedAt",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "deactivationToken",
+    "wire": "string"
+   }
+  ],
+  "DeviceSecurityDeviceAttestRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "certLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "certDer",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "signature",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityDeviceAttestReqData": [
+   {
+    "tag": 1,
+    "name": "challenge",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityDeviceActivationStateRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "state",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "stateChangedAt",
+    "wire": "uint64"
+   }
+  ],
+  "DeviceSecurityDeviceActivationStateReqData": [],
+  "DeviceSecurityDeviceActivateRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "state",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "stateChangedAt",
+    "wire": "uint64"
+   }
+  ],
+  "DeviceSecurityDeviceActivateReqData": [
+   {
+    "tag": 1,
+    "name": "requestId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "activatedAt",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "activationToken",
+    "wire": "string"
+   }
+  ],
+  "DeviceSecurityCoreBoardSnRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "coreBoardSn",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityCoreBoardSnReqData": [],
+  "CommonSetParameterRspData": [
+   {
+    "tag": 1,
+    "name": "returnCode",
+    "wire": "uint32"
+   }
+  ],
+  "CommonSetParameterReqData": [
+   {
+    "tag": 1,
+    "name": "category",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "parameterId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "type",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "len",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "value",
+    "wire": "bytes"
+   }
+  ],
+  "CommonPingRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "pingData",
+    "wire": "bytes"
+   }
+  ],
+  "CommonPingReqData": [
+   {
+    "tag": 1,
+    "name": "pingData",
+    "wire": "bytes"
+   }
+  ],
+  "CommonGetVersionRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "majorVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "minorVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "hardwareVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "loaderVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "firmwareVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 7,
+    "name": "isMassProduct",
+    "wire": "uint32"
+   }
+  ],
+  "CommonGetVersionReqData": [],
+  "CommonGetPartitionSizeRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "cmdVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "partType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "slot",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "sizeBytes",
+    "wire": "uint64"
+   }
+  ],
+  "CommonGetPartitionSizeReqData": [
+   {
+    "tag": 1,
+    "name": "name",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "slot",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "CommonGetParameterRspData": [
+   {
+    "tag": 1,
+    "name": "returnCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "category",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "parameterId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "type",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "len",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "value",
+    "wire": "bytes"
+   }
+  ],
+  "CommonGetParameterReqData": [
+   {
+    "tag": 1,
+    "name": "category",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "parameterId",
+    "wire": "uint32"
+   }
+  ],
+  "CommonGetModuleVersionRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "sender",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "receiver",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "majorVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "minorVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "hardwareVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 7,
+    "name": "loaderVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "firmwareVersion",
+    "wire": "bytes"
+   },
+   {
+    "tag": 9,
+    "name": "isMassProduct",
+    "wire": "uint32"
+   }
+  ],
+  "CommonGetModuleVersionReqData": [
+   {
+    "tag": 1,
+    "name": "sender",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "receiver",
+    "wire": "uint32"
+   }
+  ],
+  "CommonGetCryptoInfoRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "cmdVersion",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "isEncrypted",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "batchId",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "reserved",
+    "wire": "bytes"
+   }
+  ],
+  "CommonGetCryptoInfoReqData": [],
+  "CommonAccessoryListRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "count",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "entriesLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "entries",
+    "wire": "bytes"
+   }
+  ],
+  "CommonAccessoryListReqData": [
+   {
+    "tag": 1,
+    "name": "filterType",
+    "wire": "uint32"
+   }
+  ],
+  "CommonAccessoryDeactivateRspData": [
+   {
+    "tag": 1,
+    "name": "clearedActTimeMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "CommonAccessoryDeactivateReqData": [
+   {
+    "tag": 1,
+    "name": "accType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "snLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "sn",
+    "wire": "bytes"
+   }
+  ],
+  "CommonAccessoryControlRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "CommonAccessoryControlReqData": [
+   {
+    "tag": 1,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "receiverType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "receiverIndex",
+    "wire": "uint32"
+   }
+  ],
+  "CommonAccessoryActivationReportAckData": [
+   {
+    "tag": 1,
+    "name": "actTimeMs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 2,
+    "name": "seq",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "accType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "snLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "sn",
+    "wire": "bytes"
+   }
+  ],
+  "CapabilitySoftwareSnapshotRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "CapabilitySoftwareSnapshotReqData": [],
+  "CapabilityHardwareSnapshotRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "cameraRecordProfiles",
+    "wire": "message<CameraRecordProfilesCapability>"
+   }
+  ],
+  "CapabilityHardwareSnapshotReqData": [],
+  "CameraUnifiedCmdData": [
+   {
+    "tag": 1,
+    "name": "cmdType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "triggerFlags",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "zoomData",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "eisEnable",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "eisLevel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "horizonLock",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "storageType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "rawRecordEnable",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "recordProfileId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "vtConfigIndex",
+    "wire": "uint32"
+   },
+   {
+    "tag": 11,
+    "name": "proModeEnable",
+    "wire": "uint32"
+   },
+   {
+    "tag": 12,
+    "name": "expTimeIndex",
+    "wire": "uint32"
+   },
+   {
+    "tag": 13,
+    "name": "isoIndex",
+    "wire": "uint32"
+   },
+   {
+    "tag": 14,
+    "name": "evIndex",
+    "wire": "uint32"
+   },
+   {
+    "tag": 15,
+    "name": "wbIndex",
+    "wire": "uint32"
+   },
+   {
+    "tag": 16,
+    "name": "reserved",
+    "wire": "uint32"
+   }
+  ],
+  "CameraConfigSwitchCmdData": [
+   {
+    "tag": 1,
+    "name": "profileId",
+    "wire": "uint32"
+   }
+  ],
+  "AudioPlayFileRspData": [
+   {
+    "tag": 1,
+    "name": "returnCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "sessionId",
+    "wire": "uint32"
+   }
+  ],
+  "AudioPlayFileReqData": [
+   {
+    "tag": 1,
+    "name": "sessionId",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "playAction",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "audioPath",
+    "wire": "bytes"
+   }
+  ],
+  "AudioOpRspData": [
+   {
+    "tag": 1,
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "AudioOpReqData": [
+   {
+    "tag": 1,
+    "name": "operationType",
+    "wire": "uint32"
+   }
+  ],
+  "CameraCaptureControlsSetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraCaptureControlsSetReqData>"
+   }
+  ],
+  "CameraCaptureControlsSetReqData": [
+   {
+    "tag": 1,
+    "name": "updateMask",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "isProMode",
+    "wire": "bool"
+   },
+   {
+    "tag": 3,
+    "name": "shutterMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "shutterNs",
+    "wire": "uint64"
+   },
+   {
+    "tag": 5,
+    "name": "isoMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "iso",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "wbMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 8,
+    "name": "wbKelvin",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "evCompensation",
+    "wire": "float"
+   }
+  ],
+  "CameraCaptureControlsSetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraCaptureControlsSetRspData>"
+   }
+  ],
+  "CameraCaptureControlsSetRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "appliedMask",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "failedMask",
+    "wire": "uint32"
+   }
+  ],
+  "CameraPreRecordGetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraPreRecordGetReqData>"
+   }
+  ],
+  "CameraPreRecordGetReqData": [],
+  "CameraPreRecordGetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraPreRecordGetRspData>"
+   }
+  ],
+  "CameraPreRecordGetRspData": [
+   {
+    "tag": 2,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "enabled",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "durationS",
+    "wire": "uint32"
+   }
+  ],
+  "CameraPreRecordSetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraPreRecordSetReqData>"
+   }
+  ],
+  "CameraPreRecordSetReqData": [
+   {
+    "tag": 3,
+    "name": "enabled",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "durationS",
+    "wire": "uint32"
+   }
+  ],
+  "CameraPreRecordSetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraPreRecordSetRspData>"
+   }
+  ],
+  "CameraPreRecordSetRspData": [
+   {
+    "tag": 2,
+    "name": "errorCode",
+    "wire": "uint32"
+   }
+  ],
+  "CameraRecordReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRecordReqData>"
+   }
+  ],
+  "CameraRecordReqData": [
+   {
+    "tag": 1,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestId",
+    "wire": "uint64"
+   }
+  ],
+  "CameraRecordRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRecordRspData>"
+   }
+  ],
+  "CameraRecordRspData": [
+   {
+    "tag": 1,
+    "name": "action",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "requestId",
+    "wire": "uint64"
+   },
+   {
+    "tag": 3,
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "state",
+    "wire": "uint32"
+   }
+  ],
+  "CameraRelativeTrajectoryReplay": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayData": [],
+  "CameraRelativeTrajectoryReplayCatalogQueryReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayCatalogQueryReqData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayCatalogQueryReqData": [],
+  "CameraRelativeTrajectoryReplayCatalogQueryRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayCatalogQueryRspData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayCatalogQueryRspData": [
+   {
+    "name": "descriptors",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryCount",
+    "wire": "unknown"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "name": "catalogFormatVersion",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayQueryReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayQueryReqData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayQueryReqData": [],
+  "CameraRelativeTrajectoryReplayQueryRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayQueryRspData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayQueryRspData": [
+   {
+    "name": "timeMs",
+    "wire": "unknown"
+   },
+   {
+    "name": "bearingOffsetRad",
+    "wire": "unknown"
+   },
+   {
+    "name": "distanceRatioOffset",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryId",
+    "wire": "unknown"
+   },
+   {
+    "name": "sampleCount",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryIdLen",
+    "wire": "uint32"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "name": "clientRequestId",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayUploadAndStartReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayUploadAndStartReqData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayUploadAndStartReqData": [
+   {
+    "name": "trajectoryId",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryName",
+    "wire": "unknown"
+   },
+   {
+    "name": "timeMs",
+    "wire": "unknown"
+   },
+   {
+    "name": "bearingOffsetRad",
+    "wire": "unknown"
+   },
+   {
+    "name": "distanceRatioOffset",
+    "wire": "unknown"
+   },
+   {
+    "name": "targetHfovOffsetRatio",
+    "wire": "unknown"
+   },
+   {
+    "name": "targetVfovOffsetRatio",
+    "wire": "unknown"
+   },
+   {
+    "name": "zoom",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayUploadAndStartRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<CameraRelativeTrajectoryReplayUploadAndStartRspData>"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayUploadAndStartRspData": [
+   {
+    "name": "replaySessionId",
+    "wire": "unknown"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   },
+   {
+    "name": "clientRequestId",
+    "wire": "unknown"
+   }
+  ],
+  "GameMenuGetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameMenuGetReqData>"
+   }
+  ],
+  "GameMenuGetReqData": [],
+  "GameMenuGetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameMenuGetRspData>"
+   }
+  ],
+  "GameMenuGetRspData": [
+   {
+    "name": "effectiveSlots",
+    "wire": "unknown"
+   },
+   {
+    "name": "temporaryFallback",
+    "wire": "unknown"
+   },
+   {
+    "name": "configuration",
+    "wire": "unknown"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "GameMenuSetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameMenuSetReqData>"
+   }
+  ],
+  "GameMenuSetReqData": [],
+  "GameMenuSetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<GameMenuSetRspData>"
+   }
+  ],
+  "GameMenuSetRspData": [
+   {
+    "name": "effectiveSlots",
+    "wire": "unknown"
+   },
+   {
+    "name": "temporaryFallback",
+    "wire": "unknown"
+   },
+   {
+    "name": "configuration",
+    "wire": "unknown"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "MicForgetReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicForgetReqData>"
+   }
+  ],
+  "MicForgetReqData": [],
+  "MicForgetRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicForgetRspData>"
+   }
+  ],
+  "MicForgetRspData": [
+   {
+    "name": "removedCount",
+    "wire": "unknown"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "MicSavedListReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicSavedListReqData>"
+   }
+  ],
+  "MicSavedListReqData": [],
+  "MicSavedListRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicSavedListRspData>"
+   }
+  ],
+  "MicSavedListRspData": [
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "MicScanReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicScanReqData>"
+   }
+  ],
+  "MicScanReqData": [],
+  "MicScanRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicScanRspData>"
+   }
+  ],
+  "MicScanRspData": [
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "MicSourceSelectReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicSourceSelectReqData>"
+   }
+  ],
+  "MicSourceSelectReqData": [],
+  "MicSourceSelectRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<MicSourceSelectRspData>"
+   }
+  ],
+  "MicSourceSelectRspData": [
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "NmWifiConnectReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiConnectReqData>"
+   }
+  ],
+  "NmWifiConnectReqData": [
+   {
+    "tag": 1,
+    "name": "ssidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "ssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "pskLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "psk",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "security",
+    "wire": "uint32"
+   },
+   {
+    "tag": 6,
+    "name": "timeoutSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "uuid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiConnectRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiConnectRspData>"
+   }
+  ],
+  "NmWifiConnectRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "ssidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "ssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionCommitReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionCommitReqData>"
+   }
+  ],
+  "NmWifiProvisionCommitReqData": [
+   {
+    "tag": 1,
+    "name": "triggerSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "uuid",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionCommitRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionCommitRspData>"
+   }
+  ],
+  "NmWifiProvisionCommitRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "timeoutSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resv",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "totalTimeoutSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "uuid",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionResultReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionResultReqData>"
+   }
+  ],
+  "NmWifiProvisionResultReqData": [
+   {
+    "tag": 1,
+    "name": "uuid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionResultRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionResultRspData>"
+   }
+  ],
+  "NmWifiProvisionResultRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "uuidMatch",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "state",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "failReason",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "uuid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "ssidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "ssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "ipv4",
+    "wire": "bytes"
+   },
+   {
+    "tag": 9,
+    "name": "channel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 10,
+    "name": "rssi",
+    "wire": "sint32"
+   },
+   {
+    "tag": 11,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionStartReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionStartReqData>"
+   }
+  ],
+  "NmWifiProvisionStartReqData": [
+   {
+    "tag": 1,
+    "name": "triggerSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "uuid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "mqttEndpointLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "mqttEndpoint",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "mqttResv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiProvisionStartRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiProvisionStartRspData>"
+   }
+  ],
+  "NmWifiProvisionStartRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "timeoutSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resv",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "totalTimeoutSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "uuid",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiScanReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiScanReqData>"
+   }
+  ],
+  "NmWifiScanReqData": [
+   {
+    "tag": 1,
+    "name": "forceScan",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "maxCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiScanRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiScanRspData>"
+   }
+  ],
+  "NmWifiScanRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "apCount",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "totalFound",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "resv",
+    "wire": "bytes"
+   },
+   {
+    "tag": 5,
+    "name": "aps",
+    "wire": "repeated message<NmWifiApInfo>"
+   },
+   {
+    "tag": 6,
+    "name": "recentSsidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "recentSsid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "recentPskLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 9,
+    "name": "recentPsk",
+    "wire": "bytes"
+   }
+  ],
+  "DeviceSecurityLocalTlsIdentityReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityLocalTlsIdentityReqData>"
+   }
+  ],
+  "DeviceSecurityLocalTlsIdentityReqData": [],
+  "DeviceSecurityLocalTlsIdentityRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<DeviceSecurityLocalTlsIdentityRspData>"
+   }
+  ],
+  "DeviceSecurityLocalTlsIdentityRspData": [
+   {
+    "name": "deviceSn",
+    "wire": "unknown"
+   },
+   {
+    "name": "chainPem",
+    "wire": "unknown"
+   },
+   {
+    "name": "chainLen",
+    "wire": "uint32"
+   },
+   {
+    "name": "retCode",
+    "wire": "uint32"
+   }
+  ],
+  "SnapbackCaptureControl": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<SnapbackCaptureControlData>"
+   }
+  ],
+  "SnapbackCaptureControlData": [],
+  "TrajectoryReplayCapability": [
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "VoiceLanguageCapability": [
+   {
+    "name": "supportedMask",
+    "wire": "unknown"
+   },
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "LocalHttpCapability": [
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRecordResponseCapability": [
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "GameCatalogCapability": [
+   {
+    "name": "games",
+    "wire": "unknown"
+   },
+   {
+    "name": "maxAnnounced",
+    "wire": "unknown"
+   },
+   {
+    "name": "menuVersion",
+    "wire": "unknown"
+   },
+   {
+    "name": "catalogHash",
+    "wire": "unknown"
+   },
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "CameraCaptureControlsCapability": [
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "PitchStickCapability": [
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "CaptureControlsStatusData": [
+   {
+    "name": "evCompensation",
+    "wire": "unknown"
+   },
+   {
+    "name": "wbKelvin",
+    "wire": "unknown"
+   },
+   {
+    "name": "iso",
+    "wire": "unknown"
+   },
+   {
+    "name": "shutterNs",
+    "wire": "unknown"
+   },
+   {
+    "name": "evMode",
+    "wire": "unknown"
+   },
+   {
+    "name": "wbMode",
+    "wire": "unknown"
+   },
+   {
+    "name": "isoMode",
+    "wire": "unknown"
+   },
+   {
+    "name": "shutterMode",
+    "wire": "unknown"
+   },
+   {
+    "name": "isProMode",
+    "wire": "unknown"
+   }
+  ],
+  "CameraManualIsoCapability": [
+   {
+    "name": "data",
+    "wire": "unknown"
+   },
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "CameraManualIsoData": [
+   {
+    "name": "values",
+    "wire": "unknown"
+   }
+  ],
+  "SnapbackReadyData": [
+   {
+    "name": "snapshotId",
+    "wire": "unknown"
+   },
+   {
+    "name": "metadata",
+    "wire": "unknown"
+   },
+   {
+    "name": "occurredAtMs",
+    "wire": "unknown"
+   },
+   {
+    "name": "eventType",
+    "wire": "unknown"
+   }
+  ],
+  "UwbRcStatusListData": [
+   {
+    "name": "entries",
+    "wire": "unknown"
+   }
+  ],
+  "VoiceLanguageStatusData": [
+   {
+    "name": "currentLanguage",
+    "wire": "unknown"
+   },
+   {
+    "name": "supportedMask",
+    "wire": "unknown"
+   },
+   {
+    "name": "sourceMonotonicNs",
+    "wire": "unknown"
+   },
+   {
+    "name": "version",
+    "wire": "unknown"
+   }
+  ],
+  "GameAnalyticsContextData": [
+   {
+    "name": "bootSessionId",
+    "wire": "unknown"
+   },
+   {
+    "name": "valid",
+    "wire": "unknown"
+   },
+   {
+    "name": "inputSource",
+    "wire": "unknown"
+   },
+   {
+    "name": "state",
+    "wire": "unknown"
+   },
+   {
+    "name": "gameIdCode",
+    "wire": "unknown"
+   },
+   {
+    "name": "roundIndex",
+    "wire": "unknown"
+   },
+   {
+    "name": "gameSessionId",
+    "wire": "unknown"
+   },
+   {
+    "name": "taskId",
+    "wire": "unknown"
+   },
+   {
+    "name": "modeSessionId",
+    "wire": "unknown"
+   },
+   {
+    "name": "sinceBootMs",
+    "wire": "unknown"
+   },
+   {
+    "name": "timestampNs",
+    "wire": "unknown"
+   }
+  ],
+  "MicStatusData": [
+   {
+    "name": "activeMac",
+    "wire": "unknown"
+   },
+   {
+    "name": "targetMac",
+    "wire": "unknown"
+   },
+   {
+    "name": "recordAudioEnabled",
+    "wire": "unknown"
+   },
+   {
+    "name": "inputLevel",
+    "wire": "unknown"
+   },
+   {
+    "name": "inputValid",
+    "wire": "unknown"
+   },
+   {
+    "name": "resultSeq",
+    "wire": "unknown"
+   },
+   {
+    "name": "lastEventReason",
+    "wire": "unknown"
+   },
+   {
+    "name": "lastEventKind",
+    "wire": "unknown"
+   },
+   {
+    "name": "switching",
+    "wire": "unknown"
+   },
+   {
+    "name": "activeKind",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayStatusData": [
+   {
+    "name": "trajectoryId",
+    "wire": "unknown"
+   },
+   {
+    "name": "oaFlags",
+    "wire": "unknown"
+   },
+   {
+    "name": "restoredSubMode",
+    "wire": "unknown"
+   },
+   {
+    "name": "terminalReason",
+    "wire": "unknown"
+   },
+   {
+    "name": "sampleIndex",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryIdLen",
+    "wire": "uint32"
+   },
+   {
+    "name": "replaySessionId",
+    "wire": "unknown"
+   },
+   {
+    "name": "acceptedClientRequestId",
+    "wire": "unknown"
+   },
+   {
+    "name": "phase",
+    "wire": "unknown"
+   }
+  ],
+  "CameraRelativeTrajectoryReplayCatalogData": [
+   {
+    "name": "descriptors",
+    "wire": "unknown"
+   },
+   {
+    "name": "trajectoryCount",
+    "wire": "unknown"
+   },
+   {
+    "name": "catalogFormatVersion",
+    "wire": "unknown"
+   }
+  ],
+  "MicScanResultData": [
+   {
+    "name": "entries",
+    "wire": "unknown"
+   },
+   {
+    "name": "scanning",
+    "wire": "unknown"
+   }
+  ],
+  "MicSavedListData": [
+   {
+    "name": "entries",
+    "wire": "unknown"
+   }
+  ],
+  "CaptureControlsSetRspData": [
+   {
+    "name": "failedMask",
+    "wire": "unknown"
+   },
+   {
+    "name": "appliedMask",
+    "wire": "unknown"
+   },
+   {
+    "name": "result",
+    "wire": "unknown"
+   }
+  ],
+  "NmWifiApInfo": [
+   {
+    "tag": 1,
+    "name": "ssidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "ssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 3,
+    "name": "bssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 4,
+    "name": "channel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "rssi",
+    "wire": "sint32"
+   },
+   {
+    "tag": 6,
+    "name": "security",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiSwitchToApReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiSwitchToApReqData>"
+   }
+  ],
+  "NmWifiSwitchToApReqData": [
+   {
+    "tag": 1,
+    "name": "triggerSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiSwitchToStationReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiSwitchToStationReqData>"
+   }
+  ],
+  "NmWifiSwitchToStationReqData": [
+   {
+    "tag": 1,
+    "name": "triggerSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "watchdogSec",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiSwitchToStationRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiSwitchToStationRspData>"
+   }
+  ],
+  "NmWifiSwitchToStationRspData": [
+   {
+    "tag": 1,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "currentMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiSwitchToStationResultReq": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiSwitchToStationResultReqData>"
+   }
+  ],
+  "NmWifiSwitchToStationResultReqData": [
+   {
+    "tag": 1,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmWifiSwitchToStationResultRsp": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmWifiSwitchToStationResultRspData>"
+   }
+  ],
+  "NmWifiSwitchToStationResultRspData": [
+   {
+    "tag": 1,
+    "name": "valid",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "pending",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "result",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "currentMode",
+    "wire": "uint32"
+   },
+   {
+    "tag": 5,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "NmNetOnlineNotify": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<NmNetOnlineNotifyData>"
+   }
+  ],
+  "NmNetOnlineNotifyData": [
+   {
+    "tag": 1,
+    "name": "triggerSource",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "netType",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "channel",
+    "wire": "uint32"
+   },
+   {
+    "tag": 4,
+    "name": "rssi",
+    "wire": "sint32"
+   },
+   {
+    "tag": 5,
+    "name": "ipv4",
+    "wire": "bytes"
+   },
+   {
+    "tag": 6,
+    "name": "ssidLen",
+    "wire": "uint32"
+   },
+   {
+    "tag": 7,
+    "name": "ssid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 8,
+    "name": "uuid",
+    "wire": "bytes"
+   },
+   {
+    "tag": 9,
+    "name": "resv",
+    "wire": "bytes"
+   }
+  ],
+  "WifiStatus": [
+   {
+    "tag": 1,
+    "name": "header",
+    "wire": "message<WireHeader>"
+   },
+   {
+    "tag": 2,
+    "name": "data",
+    "wire": "message<WifiStatusData>"
+   }
+  ],
+  "WifiStatusData": [
+   {
+    "tag": 1,
+    "name": "txBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 2,
+    "name": "rxBitrate",
+    "wire": "uint32"
+   },
+   {
+    "tag": 3,
+    "name": "rssi",
+    "wire": "sint32"
+   },
+   {
+    "tag": 4,
+    "name": "connectionStatus",
+    "wire": "uint32"
+   }
+  ]
+ },
+ "_note": "Superset covering MondoApp v1.0.13 + v1.0.85. v1.0.85-new /cmd messages are custom DTO codecs (not protobuf-dart); field names recovered, many tags/types are 'unknown' (encode raises; decode reads raw by wire-type). See native-analysis/version-diff-1.0.85.md and cmd-delta-1.0.85.json."
+}

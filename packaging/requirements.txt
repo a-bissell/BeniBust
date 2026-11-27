@@ -1,0 +1,16 @@
+# BeniBust release dependencies.
+#
+# NOTHING here is required to build or flash a package — the whole build path is
+# Python standard library (3.10+) plus `e2fsprogs` and `ssh-keygen` on your PATH.
+# These two are optional, and only for the situations noted.
+#
+# Install with:  pip install -r requirements.txt
+
+# Required only if your robot runs a `secure_v2` firmware that refuses the
+# plaintext control channel — provides X25519 + AES-GCM for the MD-TS session.
+# Without it, BeniBust still talks to a plaintext robot.
+cryptography>=41
+
+# Required only for BLE pairing (`python -m freewheel.ble`) on real Bluetooth
+# hardware. Not needed if you dump the partition or use an existing root shell.
+bleak>=0.21

@@ -1,0 +1,16 @@
+# Built release zips (regenerate with packaging/build_release.py)
+dist/
+*.zip
+
+# Firmware pulled off a robot — large and potentially sensitive; never commit
+beni_fw/
+
+# Python
+__pycache__/
+*.pyc
+
+# Scratch / analysis output
+ghidra.json
+
+# OS / editor cruft
+.DS_Store
