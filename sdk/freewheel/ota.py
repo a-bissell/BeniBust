@@ -2208,6 +2208,11 @@ def _doctor() -> int:
             hbre = None
     rows.append(("hbre.img", hbre is not None, hbre_detail))
 
+    from . import partition_backup
+
+    backup_root = partition_backup.DEFAULT_BACKUP_ROOT
+    rows.extend(partition_backup.doctor_backup_rows(backup_root))
+
     ok_all = True
     for label, good, detail in rows:
         mark = "ok  " if good else "--  "
@@ -2291,6 +2296,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_dump.add_argument("--size", type=int, default=None,
                         help="expected byte count; defaults to the known partition size")
     p_dump.add_argument("--json", action="store_true")
+
+    p_restore = sub.add_parser(
+        "restore-backup",
+        help="Write mondo/misc (and optional hbre slot) images back from a rollback manifest",
+    )
+    p_restore.add_argument("backup_dir", help="directory containing rollback-manifest.txt")
+    p_restore.add_argument("--host", required=True, help="robot IP (root SSH)")
+    p_restore.add_argument("--ssh-port", type=int, default=2222)
+    p_restore.add_argument("--ssh-key", default=None)
+    p_restore.add_argument("--dry-run", action="store_true", help="print the restore plan only")
+    p_restore.add_argument("--json", action="store_true")
 
     p_ver = sub.add_parser("verify", help="Structurally verify an OTA package before flashing")
     p_ver.add_argument("package")
@@ -2452,6 +2468,38 @@ def main(argv: Optional[List[str]] = None) -> int:
             if not res["ok"]:
                 print("      A short read is rejected on-device; fix the cause and re-dump.")
             return 0 if res["ok"] else 1
+
+        if args.cmd == "restore-backup":
+            from . import partition_backup
+
+            backup_dir = Path(args.backup_dir)
+            manifest = partition_backup.load_manifest(backup_dir)
+            if manifest is None:
+                print(f"  [x] no {partition_backup.ROLLBACK_MANIFEST} in {backup_dir}", file=sys.stderr)
+                return 1
+            plan = partition_backup.describe_restore_plan(manifest, backup_dir)
+            print(plan)
+            if args.dry_run:
+                return 0
+            try:
+                results = partition_backup.execute_restore(
+                    args.host,
+                    backup_dir,
+                    ssh_port=args.ssh_port,
+                    ssh_key=args.ssh_key,
+                    progress=lambda label, done, total: _bar(label)(done, total),
+                )
+            except partition_backup.PartitionBackupError as exc:
+                print(f"\n  [x] {exc}", file=sys.stderr)
+                return 1
+            print()
+            if args.json:
+                print(json.dumps(results, indent=2))
+            for item in results:
+                print(f"  [+] restored {item['partition']} ({item['slot']}) -> {item['node']}")
+                print(f"      {item['bytes']:,} bytes  sha256 {item['sha256']}")
+            print("  Reboot and verify /proc/cmdline hobotboot.slot_suffix before trusting the slot.")
+            return 0
 
         if args.cmd == "verify":
             report = verify_package(args.package, base_zip_path=args.base,

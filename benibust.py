@@ -762,7 +762,7 @@ def backup_state(host: str, ssh_key: Path, ssh_port: int, outdir: str) -> int:
             ok(f"{name}.txt")
         else:
             warn(f"{name}: {(r.stderr or r.stdout).strip()}")
-    warn("State snapshot only (not full partition images). Keep a vendor full package for restore.")
+    warn("Text snapshot only (partition images live under beni_fw/rollback by default).")
     return 0
 
 
@@ -823,9 +823,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--i-own-this-device", action="store_true",
                    help="attest ownership (required unless interactive or --force)")
     p.add_argument("--backup-dir", metavar="DIR", default=None,
-                   help="after root, save a device state snapshot here")
-    p.add_argument("--restore", metavar="PKG", default=None,
-                   help="flash a stock vendor package (rollback) instead of building BeniBust")
+                   help="rollback backup root (default: beni_fw/rollback); captures mondo+misc "
+                        "before flash and optional text snapshot after root")
+    p.add_argument("--allow-flash-without-backup", action="store_true",
+                   help="override the pre-flash mondo/misc backup requirement (dangerous)")
+    p.add_argument("--restore", metavar="PATH", default=None,
+                   help="rollback: flash a vendor .zip via OTA, or restore partition images "
+                        "from a backup directory (rollback-manifest.txt)")
     p.add_argument("--scan", action="store_true",
                    help="read-only device scan and exit")
     p.add_argument("--fetch-firmware", action="store_true",
@@ -885,6 +889,50 @@ def main() -> int:
     ssh_key = Path(args.ssh_key)
     ssh_pubkey = ensure_ssh_key(ssh_key) if args.payload in ("ssh", "both") else ""
 
+    # --- Partition rollback restore (backup directory) ---
+    if args.restore:
+        restore_path = Path(args.restore)
+        if restore_path.is_dir():
+            from freewheel import partition_backup
+
+            host = discover_robot(args.host)
+            if not ssh_ok(host, ssh_key, args.ssh_port):
+                die(
+                    "Partition restore needs root SSH before writing mondo/misc.\n"
+                    f"  Try: ssh -p {args.ssh_port} -i {ssh_key.expanduser()} root@{host}"
+                )
+            manifest = partition_backup.load_manifest(restore_path)
+            if manifest is None:
+                die(f"No rollback-manifest.txt in {restore_path}")
+            plan = partition_backup.describe_restore_plan(manifest, restore_path)
+            print()
+            warn(plan)
+            if not args.force:
+                print()
+                print("  This will overwrite mondo slot image(s) and misc boot metadata on the robot.")
+                print("  Power loss during restore can brick the unit. Close the Mondo app first.")
+                try:
+                    ans = input("\n  Write these partition images? [y/N] ").strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    print()
+                    return 1
+                if ans not in ("y", "yes"):
+                    info("Aborted.")
+                    return 0
+            step(f"Restoring partition images from {restore_path}")
+            try:
+                partition_backup.execute_restore(
+                    host,
+                    restore_path,
+                    ssh_port=args.ssh_port,
+                    ssh_key=str(ssh_key),
+                    progress=lambda _label, done, total: progress_bar(done, total),
+                )
+            except partition_backup.PartitionBackupError as e:
+                die(str(e))
+            ok("Partition restore complete — reboot and verify hobotboot.slot_suffix in /proc/cmdline")
+            return 0
+
     # --- Discover inputs ---
     base_zip: Path | None = None
     if args.restore:
@@ -924,9 +972,30 @@ def main() -> int:
     host = discover_robot(args.host)
     ok(f"Robot found at {host}")
 
+    from freewheel import partition_backup
+
+    backup_root = Path(args.backup_dir) if args.backup_dir else partition_backup.DEFAULT_BACKUP_ROOT
+    backup_root.mkdir(parents=True, exist_ok=True)
+
+    step(f"Pre-flash rollback backup ({backup_root})")
+    try:
+        partition_backup.ensure_pre_flash_backups(
+            host,
+            backup_root,
+            ssh_port=args.ssh_port,
+            ssh_key=str(ssh_key),
+            allow_without=args.allow_flash_without_backup,
+            log=lambda m: (warn(m) if m.startswith("refusing") or "override" in m else info(m)),
+            progress=lambda label, done, total: progress_bar(done, total),
+        )
+        ok(f"rollback backup ready under {backup_root}")
+    except partition_backup.BackupRefusalError as e:
+        die(str(e))
+
     # --- Confirm ---
     if not args.force:
         print(f"\n  About to flash {pkg_path.name} to {host}.")
+        print(f"  Rollback images: {backup_root}/{partition_backup.ROLLBACK_MANIFEST}")
         print("  The robot will reboot. Close the Mondo app first (UCP is single-session).")
         try:
             ans = input("\n  Proceed? [y/N] ").strip().lower()
@@ -951,9 +1020,8 @@ def main() -> int:
     monitor_ota(host, timeout_sec=300)
 
     if args.restore:
-        warn("Restore note: a stock V26.11 package has no hbre, so it won't undo BeniBust.")
-        warn("Keep your own pristine dump (`python -m freewheel.ota dump-partition hbre --slot a|b`)")
-        warn("or a vendor full package that includes hbre, then verify the intended slot boots.")
+        warn("OTA vendor restore may not include hbre; partition rollback uses --restore <backup-dir>.")
+        warn(f"Pristine dumps: {backup_root} or `python -m freewheel.ota restore-backup`")
         return 0
 
     # --- Wait for reboot and verify ---
