@@ -1171,8 +1171,8 @@ def _x5_member_text(x5: zipfile.ZipFile, image: str, remote_path: str) -> Option
 def system_img_mounts_md_read_write(x5: zipfile.ZipFile) -> Optional[bool]:
     """Does this package's `system.img` mount `/md` read-write?
 
-    `True` = read-write (the legacy `/etc/hb-fstab` `defaults` line), `False` = read-only
-    or via a dm-verity device, `None` = could not tell.
+    `True` = read-write mount options, `False` = explicit read-only options (e.g. `ro`),
+    `None` = could not tell.
     """
     for path in (HB_FSTAB_PATH, *HB_FSTAB_FALLBACK_PATHS):
         text = _x5_member_text(x5, SYSTEM_IMG, path)
@@ -1188,9 +1188,7 @@ def system_img_mounts_md_read_write(x5: zipfile.ZipFile) -> Optional[bool]:
             # <device> <mountpoint> <fstype> <options> ...
             if len(fields) < 4:
                 continue
-            device, options = fields[0], fields[3].split(",")
-            if "/dev/dm-" in device or "/dev/mapper/" in device:
-                return False
+            options = fields[3].split(",")
             if "ro" in options:
                 return False
             return True
@@ -1344,13 +1342,30 @@ def slot_commit_gating_from_base_zip(base_zip: Optional[str | Path]) -> str:
         return "unknown"
     try:
         with zipfile.ZipFile(base) as zf:
-            if SYSTEM_IMG not in zf.namelist():
-                return "unknown"
             with tempfile.TemporaryDirectory(prefix="fw_gate_") as tmp:
                 local = Path(tmp) / SYSTEM_IMG
-                with zf.open(SYSTEM_IMG, "r") as src, local.open("wb") as dst:
-                    for chunk in iter(lambda: src.read(STREAM_CHUNK), b""):
-                        dst.write(chunk)
+
+                def _extract_system(src: zipfile.ZipFile) -> bool:
+                    if SYSTEM_IMG not in src.namelist():
+                        return False
+                    with src.open(SYSTEM_IMG, "r") as member, local.open("wb") as dst:
+                        for chunk in iter(lambda: member.read(STREAM_CHUNK), b""):
+                            dst.write(chunk)
+                    return True
+
+                if SYSTEM_IMG in zf.namelist():
+                    if not _extract_system(zf):
+                        return "unknown"
+                else:
+                    inner = [
+                        n for n in zf.namelist()
+                        if "_0300_" in n and n.endswith(".mass.fw.plain.unsign")
+                    ]
+                    if not inner:
+                        return "unknown"
+                    with tempfile.TemporaryFile() as spool, _open_nested_zip(zf, inner[0], spool) as x5:
+                        if not _extract_system(x5):
+                            return "unknown"
                 return slot_commit_gating_from_system_img(local)
     except Exception:  # noqa: BLE001 - unreadable base is simply "unknown"
         return "unknown"

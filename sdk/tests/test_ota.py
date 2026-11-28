@@ -646,6 +646,27 @@ def test_guard_allows_shared_blocks_mondo_with_read_only_system():
     assert not any("shared_blocks" in w for w in rep.warnings), rep.warnings
 
 
+def test_guard_refuses_shared_blocks_mondo_with_dm_rw_mount():
+    """A device-mapper source with explicit rw is still read-write for shared_blocks pairing."""
+    d = _tmpdir()
+    system = d / "system.img"
+    mondo_ro = d / "mondo_ro.img"
+    if not (_ext4_with(system, {"/etc/hb-fstab": b"/dev/dm-1 /md ext4 rw 0 0\n"})
+            and _ext4_with(mondo_ro)):
+        print("    (skipped: mke2fs not available)")
+        return
+    _mark_shared_blocks(mondo_ro)
+
+    pkg = _package_with_system(d / "V26.11.19.43_lz110_dm_rw.zip", version="26.11.19.43",
+                               system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes())
+    try:
+        ota.verify_package(pkg)
+    except ota.SafetyValidationError as e:
+        assert "shared_blocks" in str(e) and "read-write" in str(e), str(e)
+    else:
+        raise AssertionError("shared_blocks mondo with /dev/dm-* rw mount must be refused")
+
+
 def test_guard_refuses_mixed_module_builds():
     d = _tmpdir()
     system = d / "system.img"
@@ -729,6 +750,16 @@ def test_slot_commit_gating_is_detected_and_warned():
     assert ota.slot_commit_gating_from_base_zip(base_zip) == "ungated"
     assert ota.slot_commit_gating_from_base_zip(None) == "unknown"
     assert ota.slot_commit_gating_from_base_zip(d / "nope.zip") == "unknown"
+
+    mondo = d / "mondo.img"
+    if not _ext4_with(mondo):
+        print("    (skipped: mke2fs not available for nested base)")
+        return
+    nested_outer = _package_with_system(
+        d / "V26.11.19.44_lz110_nested_base.zip", version="26.11.19.44",
+        system_img=ungated.read_bytes(), mondo_img=mondo.read_bytes())
+    assert ota.SYSTEM_IMG not in zipfile.ZipFile(nested_outer).namelist()
+    assert ota.slot_commit_gating_from_base_zip(nested_outer) == "ungated"
 
 
 # ── mock md_upgrade (:8085) — inventory + resumable pull + V2 TUS ────────────
