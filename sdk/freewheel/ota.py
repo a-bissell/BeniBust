@@ -1300,11 +1300,28 @@ def collect_mondo_verity_evidence(
     return MondoVerityEvidence(sources=sources, vbmeta=vb)
 
 
-def mondo_img_differs_from_base(x5: zipfile.ZipFile, base_crcs: Dict[str, Tuple[int, int]]) -> bool:
-    if MONDO_IMG not in x5.namelist() or MONDO_IMG not in base_crcs:
-        return False
+def mondo_baseline_usable(base_crcs: Dict[str, Tuple[int, int]]) -> bool:
+    """True when we can compare this package's `mondo.img` against a stock baseline."""
+    return bool(base_crcs) and MONDO_IMG in base_crcs
+
+
+def mondo_img_differs_from_base(x5: zipfile.ZipFile, base_crcs: Dict[str, Tuple[int, int]]) -> Optional[bool]:
+    """Whether `mondo.img` changed vs base, or `None` when baseline is unknown."""
+    if MONDO_IMG not in x5.namelist():
+        return None
+    if not mondo_baseline_usable(base_crcs):
+        return None
     zi = x5.getinfo(MONDO_IMG)
     return (zi.CRC, zi.file_size) != base_crcs[MONDO_IMG]
+
+
+MONDO_VERITY_BASELINE_UNKNOWN = (
+    "refusing package: {mondo_img} is dm-verity protected ({evidence}) but no usable --base "
+    "firmware was supplied to confirm whether {mondo_img} is still the stock image. Without a "
+    "baseline we cannot tell whether an in-place edit would change the hash tree and trigger "
+    "dm-verity-corrupted / slot rollback. Pass the stock all_in_one.zip with --base, or "
+    "--allow-verity-patch only if you accept bricking risk."
+)
 
 
 def check_mondo_verity_patch(
@@ -1318,11 +1335,25 @@ def check_mondo_verity_patch(
 
     Distinct from `check_mondo_read_write_pairing` and from `--allow-unsafe-x5-override`.
     """
-    if not mondo_img_differs_from_base(x5, base_crcs):
+    if MONDO_IMG not in x5.namelist():
         return []
     ev = evidence if evidence is not None else collect_mondo_verity_evidence(x5)
     if not ev.covered:
         return []
+
+    differs = mondo_img_differs_from_base(x5, base_crcs)
+    if differs is None:
+        if allow_verity_patch:
+            return [
+                f"{MONDO_IMG} dm-verity covered but baseline unknown "
+                f"(overridden with --allow-verity-patch): {ev.summary()}"
+            ]
+        raise SafetyValidationError(
+            MONDO_VERITY_BASELINE_UNKNOWN.format(mondo_img=MONDO_IMG, evidence=ev.summary())
+        )
+    if not differs:
+        return []
+
     if allow_verity_patch:
         return [
             f"{MONDO_IMG} was modified on a dm-verity-covered slot "

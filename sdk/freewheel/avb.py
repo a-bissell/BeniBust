@@ -1,8 +1,9 @@
 """Minimal AVB vbmeta parser (stdlib only).
 
-Parses the `AVB0` vbmeta image header and the descriptor table in the auxiliary block.
-Used to detect whether `mondo` is covered by dm-verity hashtree metadata before allowing
-in-place `mondo.img` patches.
+Wire layout follows Android libavb (network byte order), see:
+  - libavb/avb_vbmeta_image.h (AvbVBMetaImageHeader)
+  - libavb/avb_descriptor.h (AvbDescriptor: tag, num_bytes_following)
+  - libavb/avb_hashtree_descriptor.h / avb_hash_descriptor.h
 """
 from __future__ import annotations
 
@@ -13,16 +14,17 @@ from typing import List, Optional, Tuple
 AVB_MAGIC = b"AVB0"
 AVB_VBMETA_HEADER_SIZE = 256
 
+AVB_DESCRIPTOR_HEADER_SIZE = 16
+
 AVB_DESCRIPTOR_TAG_HASHTREE = 1
 AVB_DESCRIPTOR_TAG_HASH = 2
 
-# Fixed payload layout matching libavb's packed descriptor structs (`<QQQQQQIQQ` / `<QQQ` + name[32]).
-_HASHTREE_NUMERIC = struct.calcsize("<QQQQQQIQQ")
-_HASHTREE_NAME_LEN = 32
-_HASHTREE_FIXED = _HASHTREE_NUMERIC + _HASHTREE_NAME_LEN
-_HASH_NUMERIC = struct.calcsize("<QQQ")
-_HASH_NAME_LEN = 32
-_HASH_FIXED = _HASH_NUMERIC + _HASH_NAME_LEN
+# Serialized body size after the 16-byte AvbDescriptor header (AvbHashtreeDescriptor w/o parent).
+_HASHTREE_FIXED_BODY = (
+    4 + 8 + 8 + 8 + 4 + 4 + 4 + 8 + 8 + 32 + 4 + 4 + 4 + 4 + 60
+)
+# AvbHashDescriptor body after the header.
+_HASH_FIXED_BODY = 8 + 32 + 4 + 4 + 4 + 4 + 60
 
 
 @dataclass(frozen=True)
@@ -54,36 +56,57 @@ def _partition_is_mondo(name: str) -> bool:
     return name.strip().lower() == "mondo"
 
 
-def _read_cstring(blob: bytes, offset: int, limit: int) -> Optional[str]:
-    end = blob.find(b"\x00", offset, limit)
-    if end < 0:
-        if offset >= limit:
-            return None
-        end = limit
-    raw = blob[offset:end]
-    if not raw:
+def _be64(data: bytes, offset: int) -> int:
+    return struct.unpack_from(">Q", data, offset)[0]
+
+
+def _be32(data: bytes, offset: int) -> int:
+    return struct.unpack_from(">I", data, offset)[0]
+
+
+def _utf8_partition_name(blob: bytes) -> Optional[str]:
+    if not blob:
         return None
     try:
-        return raw.decode("ascii")
+        return blob.decode("utf-8")
     except UnicodeDecodeError:
         return None
 
 
-def _partition_name_field(blob: bytes, offset: int) -> Optional[str]:
-    if offset + _HASHTREE_NAME_LEN > len(blob):
+def _parse_hashtree_body(body: bytes) -> Optional[str]:
+    if len(body) < _HASHTREE_FIXED_BODY:
         return None
-    field = blob[offset : offset + _HASHTREE_NAME_LEN]
-    return _read_cstring(field, 0, len(field))
+    name_len = _be32(body, 88)
+    salt_len = _be32(body, 92)
+    root_len = _be32(body, 96)
+    var_start = _HASHTREE_FIXED_BODY
+    var_total = name_len + salt_len + root_len
+    if var_start + var_total > len(body):
+        return None
+    part = body[var_start : var_start + name_len]
+    return _utf8_partition_name(part)
 
 
-def _parse_descriptor_payload(tag: int, payload: bytes) -> AvbDescriptor:
+def _parse_hash_body(body: bytes) -> Optional[str]:
+    if len(body) < _HASH_FIXED_BODY:
+        return None
+    name_len = _be32(body, 40)
+    salt_len = _be32(body, 44)
+    digest_len = _be32(body, 48)
+    var_start = _HASH_FIXED_BODY
+    var_total = name_len + salt_len + digest_len
+    if var_start + var_total > len(body):
+        return None
+    part = body[var_start : var_start + name_len]
+    return _utf8_partition_name(part)
+
+
+def _parse_descriptor_payload(tag: int, body: bytes) -> AvbDescriptor:
     part: Optional[str] = None
     if tag == AVB_DESCRIPTOR_TAG_HASHTREE:
-        if len(payload) >= _HASHTREE_FIXED:
-            part = _partition_name_field(payload, _HASHTREE_NUMERIC)
+        part = _parse_hashtree_body(body)
     elif tag == AVB_DESCRIPTOR_TAG_HASH:
-        if len(payload) >= _HASH_FIXED:
-            part = _partition_name_field(payload, _HASH_NUMERIC)
+        part = _parse_hash_body(body)
     return AvbDescriptor(tag=tag, partition_name=part)
 
 
@@ -96,8 +119,10 @@ def parse_vbmeta(blob: bytes) -> VbmetaParseResult:
     if blob[:4] != AVB_MAGIC:
         return VbmetaParseResult(status="unparseable", detail=f"bad magic {blob[:4]!r}")
     try:
-        auth_size, aux_size = struct.unpack_from("<QQ", blob, 12)
-        desc_off, desc_size = struct.unpack_from("<II", blob, 64)
+        auth_size = _be64(blob, 12)
+        aux_size = _be64(blob, 20)
+        desc_off = _be64(blob, 96)
+        desc_size = _be64(blob, 104)
     except struct.error:
         return VbmetaParseResult(status="unparseable", detail="header struct unpack failed")
 
@@ -112,7 +137,7 @@ def parse_vbmeta(blob: bytes) -> VbmetaParseResult:
     if desc_size == 0:
         return VbmetaParseResult(status="ok", detail="descriptor table empty")
 
-    if desc_off + desc_size > len(aux):
+    if desc_off > len(aux) or desc_off + desc_size > len(aux):
         return VbmetaParseResult(status="unparseable", detail="descriptor table out of auxiliary bounds")
 
     table = aux[desc_off : desc_off + desc_size]
@@ -121,27 +146,30 @@ def parse_vbmeta(blob: bytes) -> VbmetaParseResult:
     hashtree: List[str] = []
     hashes: List[str] = []
 
-    while offset + 16 <= len(table):
-        try:
-            tag, num_bytes = struct.unpack_from("<QQ", table, offset)
-        except struct.error:
+    while offset < len(table):
+        if offset + AVB_DESCRIPTOR_HEADER_SIZE > len(table):
             return VbmetaParseResult(status="unparseable", detail="descriptor header truncated")
-        if num_bytes < 16:
-            return VbmetaParseResult(status="unparseable", detail=f"descriptor size {num_bytes} < 16")
-        if offset + num_bytes > len(table):
+        try:
+            tag = _be64(table, offset)
+            nb_following = _be64(table, offset + 8)
+        except struct.error:
+            return VbmetaParseResult(status="unparseable", detail="descriptor header unpack failed")
+        if nb_following % 8 != 0:
+            return VbmetaParseResult(status="unparseable", detail="descriptor length not 8-byte aligned")
+        total = AVB_DESCRIPTOR_HEADER_SIZE + nb_following
+        if offset + total > len(table):
             return VbmetaParseResult(status="unparseable", detail="descriptor extends past table")
-        payload = table[offset + 16 : offset + num_bytes]
-        desc = _parse_descriptor_payload(tag, payload)
+        body = table[offset + AVB_DESCRIPTOR_HEADER_SIZE : offset + total]
+        desc = _parse_descriptor_payload(tag, body)
         descriptors.append(desc)
         if desc.partition_name:
             if tag == AVB_DESCRIPTOR_TAG_HASHTREE:
                 hashtree.append(desc.partition_name)
             elif tag == AVB_DESCRIPTOR_TAG_HASH:
                 hashes.append(desc.partition_name)
-        offset += num_bytes
+        offset += total
 
-    if offset != len(table) and offset < len(table):
-        # Trailing garbage after the last aligned descriptor is unparseable.
+    if offset != len(table):
         return VbmetaParseResult(status="unparseable", detail="trailing bytes in descriptor table")
 
     return VbmetaParseResult(

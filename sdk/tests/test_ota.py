@@ -617,7 +617,11 @@ def test_guard_refuses_shared_blocks_mondo_under_read_write_system():
         assert "shared_blocks" in str(e)
     else:
         raise AssertionError("--allow-unsafe-x5-override must not silence the mondo pairing guard")
-    rep = ota.verify_package(pkg, allow_unsafe_mondo_pairing=True)
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.37",
+        system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes(),
+    )
+    rep = ota.verify_package(pkg, allow_unsafe_mondo_pairing=True, base_zip_path=base)
     assert any("shared_blocks" in w for w in rep.warnings), rep.warnings
 
     # A journaled read-write mondo in the same package is fine.
@@ -640,9 +644,14 @@ def test_guard_allows_shared_blocks_mondo_with_read_only_system():
         return
     _mark_shared_blocks(mondo_ro)
 
+    stock = mondo_ro.read_bytes()
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.39",
+        system_img=system.read_bytes(), mondo_img=stock,
+    )
     pkg = _package_with_system(d / "V26.11.19.39_lz110_verity.zip", version="26.11.19.39",
-                               system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes())
-    rep = ota.verify_package(pkg)
+                               system_img=system.read_bytes(), mondo_img=stock)
+    rep = ota.verify_package(pkg, base_zip_path=base)
     assert not any("shared_blocks" in w for w in rep.warnings), rep.warnings
 
 
@@ -764,49 +773,80 @@ def test_slot_commit_gating_is_detected_and_warned():
 
 # ── dm-verity / vbmeta mondo patch guard ─────────────────────────────────────
 
-def _vbmeta_descriptor(tag: int, payload: bytes) -> bytes:
-    return struct.pack("<QQ", tag, len(payload) + 16) + payload
+def _be64(v: int) -> bytes:
+    return struct.pack(">Q", v)
 
 
-def _avb_partition_name_field(name: str) -> bytes:
-    raw = name.encode("ascii")
-    if len(raw) >= 32:
-        raise ValueError("partition name too long for AVB descriptor")
-    return raw + b"\x00" * (32 - len(raw))
+def _be32(v: int) -> bytes:
+    return struct.pack(">I", v)
 
 
-def _avb_hashtree_payload(partition: str) -> bytes:
-    fixed = struct.pack("<QQQQQQIQQ", 0, 1 << 20, 0, 0, 4096, 4096, 0, 0, 0)
-    return fixed + _avb_partition_name_field(partition) + b"\xaa" * 32 + b"\xbb" * 32
+def _wire_hashtree_descriptor(partition: str, *, salt: bytes = b"\xaa" * 32,
+                              root: bytes = b"\xbb" * 32) -> bytes:
+    """One serialized descriptor (header + body), libavb wire format."""
+    name = partition.encode("utf-8")
+    algo = b"sha256".ljust(32, b"\x00")
+    body = (
+        _be32(0)
+        + _be64(1 << 20) + _be64(0) + _be64(0)
+        + _be32(4096) + _be32(4096) + _be32(0) + _be64(0) + _be64(0)
+        + algo
+        + _be32(len(name)) + _be32(len(salt)) + _be32(len(root))
+        + _be32(0)
+        + b"\x00" * 60
+        + name + salt + root
+    )
+    # body length must be a multiple of 8 per AvbDescriptor rules
+    pad = (8 - (len(body) % 8)) % 8
+    body += b"\x00" * pad
+    tag = 1  # AVB_DESCRIPTOR_TAG_HASHTREE
+    return _be64(tag) + _be64(len(body)) + body
 
 
-def _avb_hash_payload(partition: str) -> bytes:
-    fixed = struct.pack("<QQQ", 1 << 20, 0, 32)
-    return fixed + _avb_partition_name_field(partition) + b"\xcc" * 32 + b"\xdd" * 32
+def _wire_hash_descriptor(partition: str, *, salt: bytes = b"\xcc" * 32,
+                           digest: bytes = b"\xdd" * 32) -> bytes:
+    name = partition.encode("utf-8")
+    algo = b"sha256".ljust(32, b"\x00")
+    body = (
+        _be64(1 << 20)
+        + algo
+        + _be32(len(name)) + _be32(len(salt)) + _be32(len(digest))
+        + _be32(0)
+        + b"\x00" * 60
+        + name + salt + digest
+    )
+    pad = (8 - (len(body) % 8)) % 8
+    body += b"\x00" * pad
+    return _be64(2) + _be64(len(body)) + body
 
 
-def _synthetic_vbmeta(*descriptor_blobs: bytes) -> bytes:
-    table = b"".join(descriptor_blobs)
+def _synthetic_vbmeta(*descriptors: bytes) -> bytes:
+    """Minimal vbmeta image: header (BE) + auxiliary block (64-byte aligned)."""
+    table = b"".join(descriptors)
+    aux_size = ((len(table) + 63) // 64) * 64
+    aux = table + b"\x00" * (aux_size - len(table))
     header = bytearray(256)
     header[0:4] = b"AVB0"
-    struct.pack_into("<II", header, 4, 1, 0)
-    struct.pack_into("<QQ", header, 12, 0, len(table))
-    struct.pack_into("<II", header, 64, 0, len(table))
-    return bytes(header) + table
+    struct.pack_into(">II", header, 4, 1, 0)
+    struct.pack_into(">Q", header, 12, 0)           # authentication_data_block_size
+    struct.pack_into(">Q", header, 20, aux_size)    # auxiliary_data_block_size
+    struct.pack_into(">Q", header, 96, 0)           # descriptors_offset (into aux)
+    struct.pack_into(">Q", header, 104, len(table))  # descriptors_size
+    return bytes(header) + aux
 
 
 def test_avb_vbmeta_parser_synthetic():
     from freewheel import avb
 
-    mondo_tree = _vbmeta_descriptor(avb.AVB_DESCRIPTOR_TAG_HASHTREE, _avb_hashtree_payload("mondo"))
-    system_tree = _vbmeta_descriptor(avb.AVB_DESCRIPTOR_TAG_HASHTREE, _avb_hashtree_payload("system"))
+    mondo_tree = _wire_hashtree_descriptor("mondo")
+    system_tree = _wire_hashtree_descriptor("system")
     blob = _synthetic_vbmeta(mondo_tree, system_tree)
     rep = avb.parse_vbmeta(blob)
     assert rep.status == "ok"
     assert rep.mondo_hashtree and not rep.mondo_hash
     assert "system" in rep.hashtree_partitions and "mondo" in rep.hashtree_partitions
 
-    hash_only = _vbmeta_descriptor(avb.AVB_DESCRIPTOR_TAG_HASH, _avb_hash_payload("boot"))
+    hash_only = _wire_hash_descriptor("boot")
     rep2 = avb.parse_vbmeta(_synthetic_vbmeta(hash_only))
     assert rep2.status == "ok" and not rep2.mondo_hashtree and rep2.hash_partitions == ("boot",)
 
@@ -815,12 +855,22 @@ def test_avb_vbmeta_parser_synthetic():
     rep4 = avb.parse_vbmeta(blob[:200])
     assert rep4.status == "unparseable"
 
+    # Little-endian legacy layout must not parse as ok with mondo present (regression).
+    le_table = struct.pack("<QQ", 1, 68) + b"\x00" * 68 + b"mondo\x00" + b"\x00" * 27
+    le_header = bytearray(256)
+    le_header[0:4] = b"AVB0"
+    struct.pack_into("<QQ", le_header, 12, 0, len(le_table))
+    struct.pack_into("<II", le_header, 64, 0, len(le_table))
+    rep_le = avb.parse_vbmeta(bytes(le_header) + le_table)
+    assert rep_le.status != "ok" or not rep_le.mondo_hashtree, rep_le
+
     garbage_table = mondo_tree + b"\xff" * 4
     header = bytearray(256)
     header[0:4] = b"AVB0"
-    struct.pack_into("<II", header, 4, 1, 0)
-    struct.pack_into("<QQ", header, 12, 0, len(garbage_table))
-    struct.pack_into("<II", header, 64, 0, len(garbage_table))
+    struct.pack_into(">Q", header, 12, 0)
+    struct.pack_into(">Q", header, 20, len(garbage_table))
+    struct.pack_into(">Q", header, 96, 0)
+    struct.pack_into(">Q", header, 104, len(garbage_table))
     assert avb.parse_vbmeta(bytes(header) + garbage_table).status == "unparseable"
 
 
@@ -836,10 +886,7 @@ def test_guard_refuses_verity_covered_mondo_patch():
         print("    (skipped: mke2fs not available)")
         return
 
-    vbmeta = _synthetic_vbmeta(
-        _vbmeta_descriptor(avb.AVB_DESCRIPTOR_TAG_HASHTREE, _avb_hashtree_payload("mondo")),
-        _vbmeta_descriptor(avb.AVB_DESCRIPTOR_TAG_HASHTREE, _avb_hashtree_payload("system")),
-    )
+    vbmeta = _synthetic_vbmeta(_wire_hashtree_descriptor("mondo"), _wire_hashtree_descriptor("system"))
     stock = mondo.read_bytes()
     patched = bytearray(stock)
     patched[4096] ^= 0x55
@@ -882,6 +929,30 @@ def test_guard_refuses_verity_covered_mondo_patch():
         extra_inner={"vbmeta.img": vbmeta},
     )
     assert ota.verify_package(ok_pkg, base_zip_path=base).verified_x5_partitions
+
+
+def test_guard_refuses_verity_covered_mondo_without_baseline():
+    """Without --base we cannot prove mondo is stock; refuse when vbmeta says dm-verity."""
+    d = _tmpdir()
+    mondo = d / "mondo.img"
+    if not _ext4_with(mondo, {"/bin/ota_tool": _aarch64_elf(128)}):
+        print("    (skipped: mke2fs not available)")
+        return
+    vbmeta = _synthetic_vbmeta(_wire_hashtree_descriptor("mondo"))
+    pkg = _package_with_system(
+        d / "V26.11.19.53_lz110_nobase.zip", version="26.11.19.53",
+        system_img=b"\x00" * 8192,
+        mondo_img=mondo.read_bytes(),
+        extra_inner={"vbmeta.img": vbmeta},
+    )
+    try:
+        ota.verify_package(pkg)
+    except ota.SafetyValidationError as e:
+        assert "no usable --base" in str(e) or "baseline" in str(e).lower(), str(e)
+    else:
+        raise AssertionError("verity-covered mondo without baseline must be refused")
+    rep = ota.verify_package(pkg, allow_verity_patch=True)
+    assert any("baseline unknown" in w.lower() for w in rep.warnings), rep.warnings
 
 
 def test_guard_verity_evidence_shared_blocks_and_conf_paths():
