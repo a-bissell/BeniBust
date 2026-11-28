@@ -501,6 +501,13 @@ global_timeout = 3600
     step("Verifying package integrity")
     if not output.name.startswith("V"):
         warn(f"Output filename {output.name!r} should start with 'V{version}_' for md_upgrade")
+
+    # Slot-commit gating is a property of the firmware the package is built from, so
+    # it is checkable at build time — before anything touches the robot.
+    gate = _ota().slot_commit_gating_from_base_zip(base_zip)
+    banner = gate and _ota().format_slot_commit_warning(gate)
+    if banner:
+        print(banner)
     try:
         report = _ota().verify_package(
             output,
@@ -522,7 +529,7 @@ global_timeout = 3600
 # Upload, install, monitor
 # ---------------------------------------------------------------------------
 
-def upload_package(pkg_path: Path, host: str) -> dict:
+def upload_package(pkg_path: Path, host: str, base_zip_path: Path | None = None) -> dict:
     step(f"Uploading to {host} via TUS (this takes a few minutes)")
     info("Close the Mondo app first — UCP is single-session.")
 
@@ -536,6 +543,10 @@ def upload_package(pkg_path: Path, host: str) -> dict:
         chunk_size=4 * 1024 * 1024,
         progress=progress_bar,
         log=lambda m: info(m),
+        base_zip_path=base_zip_path,
+        # BeniBust patches ota_process by design, so the protected-file CRC gate is
+        # expected to fire; the mondo pairing and mixed-module gates are NOT overridden.
+        allow_unsafe_x5_override=True,
     )
     print()  # newline after progress bar
     ok(f"uploaded: {result.mode}, upgrade_id={result.upgrade_id}")
@@ -875,6 +886,7 @@ def main() -> int:
     ssh_pubkey = ensure_ssh_key(ssh_key) if args.payload in ("ssh", "both") else ""
 
     # --- Discover inputs ---
+    base_zip: Path | None = None
     if args.restore:
         pkg_path = Path(args.restore)
         if not pkg_path.is_file():
@@ -926,7 +938,7 @@ def main() -> int:
             return 0
 
     # --- Upload ---
-    upload_result = upload_package(pkg_path, host)
+    upload_result = upload_package(pkg_path, host, base_zip)
 
     # --- Install ---
     install_ota(

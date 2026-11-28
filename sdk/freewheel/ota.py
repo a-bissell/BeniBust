@@ -1095,6 +1095,267 @@ def _open_nested_zip(outer: zipfile.ZipFile, entry: str, spool) -> zipfile.ZipFi
     return zipfile.ZipFile(spool, "r")
 
 
+# ---------------------------------------------------------------------------
+# Preflight guards
+#
+# These encode the two failure modes that cost a real robot its only booting slot:
+#
+#   1. A `shared_blocks` (read-only, deduplicated) `mondo.img` paired with a
+#      `system.img` whose `/etc/hb-fstab` still mounts `/md` read-write. The kernel
+#      refuses the mount, `/md` never comes up, and everything that lives on it dies.
+#   2. A package stitched from two firmware builds, which is how that pairing gets
+#      made in the first place.
+#
+# Both are cheap to check: the ext4 feature words are in the first 2 KiB of an image,
+# and `/etc/hb-fstab` is a small text file.
+# ---------------------------------------------------------------------------
+
+MONDO_IMG = "mondo.img"
+SYSTEM_IMG = "system.img"
+HB_FSTAB_PATH = "/etc/hb-fstab"
+HB_FSTAB_FALLBACK_PATHS = ("/etc/fstab",) + tuple(f"/etc/init.d/S{seq}mountall" for seq in range(60, 70))
+
+# Paths that gate committing the booted slot as good. Firmware V26.11.19.01 added
+# `/run/lz100-mondo-apps-ready` to `S99ota_update_check.sh`; the older script ran
+# `ota_tool -b` unconditionally, which commits a broken slot before anything can roll
+# it back.
+SLOT_COMMIT_SCRIPT = "/etc/init.d/S99ota_update_check.sh"
+SLOT_COMMIT_GATE = "/run/lz100-mondo-apps-ready"
+SLOT_COMMIT_GATE_MARKERS = ("lz100-mondo-apps-ready", "lz100-mondo-check")
+
+SLOT_COMMIT_UNKNOWN_BANNER = (
+    "\n"
+    "  ############################################################\n"
+    "  #  SLOT-COMMIT GATING NOT CONFIRMED HEALTHY                 #\n"
+    "  ############################################################\n"
+    "  We could not inspect the target's /etc/init.d/S99ota_update_check.sh,\n"
+    "  so we cannot tell whether a slot that boots without /md is committed as\n"
+    "  `successful_boot` anyway. Firmware up to V26.10.x ran `ota_tool -b`\n"
+    "  unconditionally, which silently disables U-Boot's A/B auto-rollback: the\n"
+    "  robot keeps the broken slot through power cycles instead of falling back.\n"
+    "  Before relying on rollback: boot once, confirm /run/lz100-mondo-apps-ready\n"
+    "  gating exists, then power-cycle twice and confirm the slot counter is\n"
+    "  decrementing (ota_tool -g).\n"
+)
+
+
+def x5_image_features(x5: zipfile.ZipFile, name: str) -> Optional[Any]:
+    """Superblock features of one image inside an unpacked 0300 zip, without extracting it."""
+    from . import ext4
+
+    if name not in x5.namelist():
+        return None
+    with x5.open(name, "r") as fp:
+        feats = ext4.read_superblock(fp)
+    return feats if feats.is_ext4 else None
+
+
+def _x5_member_text(x5: zipfile.ZipFile, image: str, remote_path: str) -> Optional[str]:
+    """Read a small text file out of an ext4 image inside the zip (streamed, no 1 GB copy retained)."""
+    from . import ext4
+
+    if image not in x5.namelist():
+        return None
+    with tempfile.TemporaryDirectory(prefix="fw_fstab_") as tmp:
+        local = Path(tmp) / Path(image).name
+        with x5.open(image, "r") as src, local.open("wb") as dst:
+            for chunk in iter(lambda: src.read(STREAM_CHUNK), b""):
+                dst.write(chunk)
+        try:
+            data = ext4.Ext4Image(local).read_file(remote_path)
+        except Exception:  # noqa: BLE001 - missing path / unreadable image is "unknown"
+            return None
+    return data.decode("utf-8", errors="replace")
+
+
+def system_img_mounts_md_read_write(x5: zipfile.ZipFile) -> Optional[bool]:
+    """Does this package's `system.img` mount `/md` read-write?
+
+    `True` = read-write (the legacy `/etc/hb-fstab` `defaults` line), `False` = read-only
+    or via a dm-verity device, `None` = could not tell.
+    """
+    for path in (HB_FSTAB_PATH, *HB_FSTAB_FALLBACK_PATHS):
+        text = _x5_member_text(x5, SYSTEM_IMG, path)
+        if text is None:
+            continue
+        for raw in text.splitlines():
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                continue
+            fields = line.split()
+            if "/md" not in fields and not any(f.startswith("/md") for f in fields[1:2]):
+                continue
+            # <device> <mountpoint> <fstype> <options> ...
+            if len(fields) < 4:
+                continue
+            device, options = fields[0], fields[3].split(",")
+            if "/dev/dm-" in device or "/dev/mapper/" in device:
+                return False
+            if "ro" in options:
+                return False
+            return True
+    return None
+
+
+def check_mondo_read_write_pairing(x5: zipfile.ZipFile, *, allow_override: bool = False) -> List[str]:
+    """Refuse a read-only `mondo.img` that a read-write-mounting `system.img` would break on.
+
+    Returns advisory notes; raises `SafetyValidationError` for the bricking combination.
+    """
+    feats = x5_image_features(x5, MONDO_IMG)
+    if feats is None or not feats.shared_blocks:
+        return []
+
+    mounts_rw = system_img_mounts_md_read_write(x5)
+    if mounts_rw is False:
+        return []       # dm-verity / ro mount: the pairing is consistent
+    if mounts_rw is None:
+        return [
+            f"{MONDO_IMG} is shared_blocks (RO_COMPAT 0x4000) but this package's {SYSTEM_IMG} "
+            "could not be read to confirm /md mounts read-only; if it mounts /md rw the slot "
+            "will not boot"
+        ]
+    if allow_override:
+        return [
+            f"{MONDO_IMG} is shared_blocks but {SYSTEM_IMG} mounts /md read-write "
+            "(overridden with --allow-unsafe-mondo-pairing)"
+        ]
+    raise SafetyValidationError(
+        f"refusing package: {MONDO_IMG} is shared_blocks (RO_COMPAT 0x4000, a deduplicated "
+        f"read-only ext4) while this package's {SYSTEM_IMG} mounts /md read-write via "
+        f"{HB_FSTAB_PATH}. The kernel refuses an rw mount of a shared_blocks filesystem "
+        "(`EXT4-fs: couldn't mount RDWR because of unsupported optional features (4000)`), "
+        "/md never mounts, and the slot boots into a dead robot. Ship a system.img that "
+        "mounts /md read-only behind dm-verity, or use a journaled, non-shared_blocks "
+        f"{MONDO_IMG}. Verify a read-write mount on the robot from the good slot before flashing."
+    )
+
+
+_INNER_VERSIONED_IMG_RE = re.compile(r".*_V(?P<version>\d+\.\d+\.\d+\.\d+)_\d{8,}\.(?:img|bin)")
+
+
+def _module_version_claims(zf: zipfile.ZipFile, entries: List[str], manifest_name: str,
+                           firmwares: List[Dict[str, Any]]) -> List[Tuple[str, str]]:
+    """Version each *module* asserts, as (source, version).
+
+    Only module-level identities are collected, deliberately:
+
+    * `[package].version` is the release the package ships as, and vendor packages name
+      their inner X5 module after the *build* it was cut from — V26.11.19.01 shipped a
+      `lz110_0300_V26.10.27.92_...` module, so comparing the two would flag every stock
+      package. The same goes for the `0000` manifest entry.
+    * `data.json`'s `version` is not the package release either.
+
+    What must agree is the modules with each other: `0300` and `0301` from one release.
+    """
+    claims: List[Tuple[str, str]] = []
+    for name in entries:
+        if name == manifest_name or name.endswith("/"):
+            continue
+        m = PART_FILENAME_RE.match(name)
+        if m and m.group("part").upper() != "0000":
+            claims.append((f"module {m.group('part').upper()} ({Path(name).name})", m.group("version")))
+    return claims
+
+
+def check_module_build_consistency(claims: List[Tuple[str, str]], *, allow_override: bool = False) -> List[str]:
+    """Refuse a package whose modules come from different firmware builds.
+
+    This catches a package stitched together at the module level (an `0301` from one
+    release next to an `0300` from another). It cannot catch a mix *inside* the `0300`
+    archive — a rebuilt zip carries no vendor version for its images — which is why
+    `check_mondo_read_write_pairing` inspects the images themselves rather than trusting
+    any version string.
+    """
+    distinct = sorted({v for _src, v in claims})
+    if len(distinct) <= 1:
+        return []
+    detail = "\n".join(f"    {src}: {ver}" for src, ver in claims)
+    if allow_override:
+        return ["package mixes modules from different firmware builds (overridden):\n" + detail]
+    raise SafetyValidationError(
+        "refusing package: it mixes modules from different firmware builds.\n" + detail +
+        "\n  A module taken from a newer release than the rest of the slot is how a "
+        "read-only mondo.img ends up under a read-write-mounting system.img.\n"
+        "  Rebuild every module from one release, or pass --allow-mixed-firmware if you "
+        "really intend a hybrid and have confirmed the pairing on hardware."
+    )
+
+
+def note_data_json_version(data: Dict[str, Any], manifest_version: str) -> List[str]:
+    """Advisory only: `data.json` naming a different release than the manifest is normal.
+
+    Vendor packages keep the inner build identity there, so this can never be a refusal —
+    it is printed so a hand-edited `data.json` is visible rather than silent.
+    """
+    declared = str(data.get("version", "") or "")
+    if not declared or not manifest_version or declared == manifest_version:
+        return []
+    return [
+        f"data.json version {declared!r} differs from the package version {manifest_version!r} "
+        "(normal for vendor packages; check it if you edited data.json by hand)"
+    ]
+
+
+def slot_commit_gating_from_system_img(system_img: str | Path) -> str:
+    """`"gated"`, `"ungated"`, or `"unknown"` for one `system.img`'s slot-commit script."""
+    from . import ext4
+
+    try:
+        script = ext4.Ext4Image(system_img).read_file(SLOT_COMMIT_SCRIPT).decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001 - no image, no path, unreadable: all "unknown"
+        return "unknown"
+    if any(marker in script for marker in SLOT_COMMIT_GATE_MARKERS):
+        return "gated"
+    if "ota_tool" in script and "-b" in script:
+        return "ungated"
+    return "unknown"
+
+
+def format_slot_commit_warning(state: str) -> str:
+    """Unmissable banner for a slot-commit gating state that is not known-good."""
+    if state == "gated":
+        return ""
+    if state == "ungated":
+        return (
+            "\n"
+            "  ############################################################\n"
+            "  #  TARGET COMMITS SLOTS UNCONDITIONALLY (ota_tool -b)       #\n"
+            "  ############################################################\n"
+            f"  This package's {SLOT_COMMIT_SCRIPT} runs `ota_tool -b` without checking\n"
+            f"  {SLOT_COMMIT_GATE}. The first boot of the new slot marks it\n"
+            "  successful_boot=1 no matter how broken it is, so U-Boot's A/B\n"
+            "  auto-rollback will NOT fire and power cycling will not recover the robot.\n"
+            "  Only flash a change you have already proven boots.\n"
+        )
+    return SLOT_COMMIT_UNKNOWN_BANNER
+
+
+def slot_commit_gating_from_base_zip(base_zip: Optional[str | Path]) -> str:
+    """Slot-commit gating of the firmware a package will be built/flashed on.
+
+    The state comes from the base package's own `system.img`, which is the script set the
+    target will actually run. No base package means no answer: `"unknown"`.
+    """
+    if base_zip is None:
+        return "unknown"
+    base = Path(base_zip)
+    if not base.is_file() or not zipfile.is_zipfile(base):
+        return "unknown"
+    try:
+        with zipfile.ZipFile(base) as zf:
+            if SYSTEM_IMG not in zf.namelist():
+                return "unknown"
+            with tempfile.TemporaryDirectory(prefix="fw_gate_") as tmp:
+                local = Path(tmp) / SYSTEM_IMG
+                with zf.open(SYSTEM_IMG, "r") as src, local.open("wb") as dst:
+                    for chunk in iter(lambda: src.read(STREAM_CHUNK), b""):
+                        dst.write(chunk)
+                return slot_commit_gating_from_system_img(local)
+    except Exception:  # noqa: BLE001 - unreadable base is simply "unknown"
+        return "unknown"
+
+
 def _collect_base_x5_crcs(base_zip_path: Optional[str | Path]) -> Dict[str, Tuple[int, int]]:
     crcs: Dict[str, Tuple[int, int]] = {}
     if base_zip_path is None or not Path(base_zip_path).is_file():
@@ -1149,9 +1410,14 @@ def _verify_outer_modules(zf: zipfile.ZipFile, entries: List[str], manifest_name
 
 
 def _verify_inner_x5(zf: zipfile.ZipFile, x5_entry: str, base_crcs: Dict[str, Tuple[int, int]], *,
-                     allow_unsafe: bool) -> Tuple[List[str], Optional[int]]:
+                     allow_unsafe: bool, allow_mixed_firmware: bool = False,
+                     allow_unsafe_mondo_pairing: bool = False,
+                     manifest_version: str = "",
+                     module_version_claims: Optional[List[Tuple[str, str]]] = None,
+                     warnings: Optional[List[str]] = None) -> Tuple[List[str], Optional[int]]:
     parts: List[str] = []
     ota_mode: Optional[int] = None
+    warnings = warnings if warnings is not None else []
     with tempfile.TemporaryFile() as spool, _open_nested_zip(zf, x5_entry, spool) as x5:
         bad = x5.testzip()
         if bad is not None:
@@ -1208,11 +1474,20 @@ def _verify_inner_x5(zf: zipfile.ZipFile, x5_entry: str, base_crcs: Dict[str, Tu
                     f"data.json MD5 mismatch for {imgname}: expected {expected_md5} (scope={scope}), got {actual_md5}"
                 )
             parts.append(part_name)
+
+        # Preflight: a read-only mondo.img must not ship under a read-write-mounting
+        # system.img, and a package must not stitch two firmware builds together.
+        warnings.extend(note_data_json_version(data, manifest_version))
+        warnings.extend(check_module_build_consistency(module_version_claims,
+                                                      allow_override=allow_mixed_firmware))
+        warnings.extend(check_mondo_read_write_pairing(x5, allow_override=allow_unsafe_mondo_pairing))
     return parts, ota_mode
 
 
 def verify_package(zip_path: str | Path, *, base_zip_path: Optional[str | Path] = None,
                    allow_unsafe_x5_override: bool = False,
+                   allow_mixed_firmware: bool = False,
+                   allow_unsafe_mondo_pairing: bool = False,
                    logical_filename: Optional[str] = None) -> PackageVerificationReport:
     """Structurally verify an OTA `.zip`: manifest, module SHA-256, inner MD5 scopes, perms, protected files."""
     pkg = Path(zip_path)
@@ -1227,6 +1502,7 @@ def verify_package(zip_path: str | Path, *, base_zip_path: Optional[str | Path] 
 
     warnings: List[str] = []
     base_crcs = _collect_base_x5_crcs(base_zip_path)
+    module_claims: List[Tuple[str, str]] = []
 
     with zipfile.ZipFile(pkg) as zf:
         bad = zf.testzip()
@@ -1251,12 +1527,17 @@ def verify_package(zip_path: str | Path, *, base_zip_path: Optional[str | Path] 
         if not firmwares:
             raise SafetyValidationError(f"no [[firmwares]] entries in {manifest}")
         modules, x5_entry = _verify_outer_modules(zf, entries, manifest, firmwares)
+        module_claims = _module_version_claims(zf, entries, manifest, firmwares)
 
         x5_parts: List[str] = []
         ota_mode: Optional[int] = None
         if x5_entry is not None:
             x5_parts, ota_mode = _verify_inner_x5(
-                zf, x5_entry, base_crcs, allow_unsafe=allow_unsafe_x5_override
+                zf, x5_entry, base_crcs, allow_unsafe=allow_unsafe_x5_override,
+                allow_mixed_firmware=allow_mixed_firmware,
+                allow_unsafe_mondo_pairing=allow_unsafe_mondo_pairing,
+                manifest_version=version,
+                module_version_claims=module_claims, warnings=warnings,
             )
 
     return PackageVerificationReport(
@@ -1727,6 +2008,8 @@ def upload_firmware(zip_path: str | Path, *, host: str = "192.168.7.1", port: in
                     upload_token: Optional[str] = None, verify_before_upload: bool = True,
                     base_zip_path: Optional[str | Path] = None,
                     allow_unsafe_x5_override: bool = False,
+                    allow_mixed_firmware: bool = False,
+                    allow_unsafe_mondo_pairing: bool = False,
                     min_battery_pct: int = MIN_SAFE_BATTERY_PCT, ignore_battery: bool = False,
                     max_retries: int = 2, timeout: float = 600.0, chunk_size: int = 4 * STREAM_CHUNK,
                     identity: Optional[str] = None,
@@ -1746,8 +2029,19 @@ def upload_firmware(zip_path: str | Path, *, host: str = "192.168.7.1", port: in
     if verify_before_upload:
         report = verify_package(path, base_zip_path=base_zip_path,
                                 allow_unsafe_x5_override=allow_unsafe_x5_override,
+                                allow_mixed_firmware=allow_mixed_firmware,
+                                allow_unsafe_mondo_pairing=allow_unsafe_mondo_pairing,
                                 logical_filename=filename)
         warnings.extend(report.warnings)
+
+    # Whether the target commits a booted slot as successful without checking that /md
+    # came up. When we cannot confirm the gate exists, say so loudly before flashing:
+    # an ungated S99ota_update_check.sh (`ota_tool -b`) removes the A/B rollback entirely.
+    gate_state = slot_commit_gating_from_base_zip(base_zip_path)
+    banner = format_slot_commit_warning(gate_state)
+    if banner:
+        log and log(banner.strip("\n"))
+        warnings.append(f"slot-commit gating is {gate_state.upper()} for this target")
 
     md5_hex, size = md5_file(path)
     sha = sha256_file(path)
@@ -2002,6 +2296,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_ver.add_argument("package")
     p_ver.add_argument("--base", default=None, help="the stock all_in_one.zip the package was built from")
     p_ver.add_argument("--allow-unsafe-x5-override", action="store_true")
+    p_ver.add_argument("--allow-mixed-firmware", action="store_true",
+                       help="permit a package whose modules come from different firmware builds")
+    p_ver.add_argument("--allow-unsafe-mondo-pairing", action="store_true",
+                       help="permit a shared_blocks mondo.img under a read-write-mounting system.img")
 
     p_up = sub.add_parser("upload", help="Upload (and optionally install) a package")
     p_up.add_argument("package")
@@ -2014,6 +2312,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_up.add_argument("--device-id", default=None, help="robot serial (auto-queried when omitted)")
     p_up.add_argument("--identity", default=None)
     p_up.add_argument("--base", default=None)
+    p_up.add_argument("--allow-mixed-firmware", action="store_true",
+                      help="permit uploading a package whose modules come from different builds")
+    p_up.add_argument("--allow-unsafe-mondo-pairing", action="store_true",
+                      help="permit uploading a shared_blocks mondo.img under a rw-mounting system.img")
     p_up.add_argument("--no-verify", action="store_true", help="skip the pre-upload package validation")
     p_up.add_argument("--ignore-battery", action="store_true")
     p_up.add_argument("--install", action="store_true", help="trigger the install once the robot says READY")
@@ -2153,7 +2455,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
         if args.cmd == "verify":
             report = verify_package(args.package, base_zip_path=args.base,
-                                    allow_unsafe_x5_override=args.allow_unsafe_x5_override)
+                                    allow_unsafe_x5_override=args.allow_unsafe_x5_override,
+                                    allow_mixed_firmware=args.allow_mixed_firmware,
+                                    allow_unsafe_mondo_pairing=args.allow_unsafe_mondo_pairing)
             print(f"  [+] {report.zip_path.name}: V{report.package_version}")
             print(f"      manifest: {report.manifest_name}")
             print(f"      modules verified: {report.verified_modules}")
@@ -2162,6 +2466,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                 print(f"      ota_process mode: {oct(report.ota_process_mode)}")
             for w in report.warnings:
                 print(f"  [!] {w}")
+            gate = slot_commit_gating_from_base_zip(args.base)
+            print(f"      slot-commit gating: {gate.upper()}"
+                  + ("" if gate == "gated" else
+                     " (pass --base <stock all_in_one.zip> to determine this)" if gate == "unknown" else ""))
+            banner = format_slot_commit_warning(gate)
+            if banner:
+                print(banner, file=sys.stderr)
             return 0
 
         if args.cmd == "upload":
@@ -2169,6 +2480,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                 args.package, host=args.host, port=args.port, ucp_port=args.ucp_port, mode=args.mode,
                 scheme=args.scheme, bearer_token=args.bearer_token, device_id=args.device_id,
                 identity=args.identity, base_zip_path=args.base,
+                allow_mixed_firmware=args.allow_mixed_firmware,
+                allow_unsafe_mondo_pairing=args.allow_unsafe_mondo_pairing,
                 verify_before_upload=not args.no_verify, ignore_battery=args.ignore_battery,
                 progress=_bar(Path(args.package).name), log=lambda m: print(f"  [*] {m}"),
             )

@@ -401,6 +401,336 @@ def test_verify_package_protects_avb_files_against_the_base():
     assert rep.verified_x5_partitions
 
 
+# ── preflight guards: shared_blocks, mixed builds, slot-commit gating ────────
+#
+# All offline: ext4 images are synthesized with `mke2fs` (+ a raw superblock RO_COMPAT
+# write, since no e2fsprogs build ships a `shared_blocks` creator/`unshare_blocks` here)
+# and packages are built with the same layout `md_upgrade` expects.
+
+def _ext4_with(path: Path, files: dict[str, bytes] | None = None, *, size_mb: int = 16,
+               extra_mkfs: tuple[str, ...] = ()) -> bool:
+    from freewheel.ext4 import Ext4Image
+    if not _has_mke2fs():
+        return False
+    subprocess.run(["truncate", "-s", f"{size_mb}M", str(path)], check=True)
+    subprocess.run(["mke2fs", "-q", "-t", "ext4", "-F", *extra_mkfs, str(path)], check=True,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if files:
+        overlay = Path(tempfile.mkdtemp(prefix="fw_g_ov_")) / "root"
+        for remote, blob in files.items():
+            local = overlay / remote.lstrip("/")
+            local.parent.mkdir(parents=True, exist_ok=True)
+            local.write_bytes(blob)
+        Ext4Image(path).apply_overlay_and_deletes(
+            overlay_dir=overlay, mode_overrides={p: 0o644 for p in files})
+    return True
+
+
+def _mark_shared_blocks(path: Path) -> None:
+    """Set RO_COMPAT 0x4000 in the superblock, as a deduplicated read-only image carries it.
+
+    `tune2fs -O shared_blocks` and `e2fsck -E unshare_blocks` do not exist in every
+    e2fsprogs build (1.47 on Ubuntu rejects both), so the bit is written directly. This is
+    the same bit `dumpe2fs -h` renders as `shared_blocks`.
+    """
+    import struct
+    with path.open("r+b") as fp:
+        fp.seek(1024 + 0x64)
+        ro_compat = struct.unpack("<I", fp.read(4))[0]
+        fp.seek(1024 + 0x64)
+        fp.write(struct.pack("<I", ro_compat | 0x4000))
+
+
+def test_read_superblock_detects_shared_blocks_without_dumpe2fs():
+    """The feature words come from the image itself; dumpe2fs need not exist."""
+    from freewheel import ext4
+
+    d = _tmpdir()
+    plain = d / "plain.img"
+    if not _ext4_with(plain, {"/etc/version": b"26.10.28.04\n"}):
+        print("    (skipped: mke2fs not available)")
+        return
+    shared = d / "shared.img"
+    shutil.copyfile(plain, shared)
+    _mark_shared_blocks(shared)
+
+    plain_feats = ext4.read_superblock(plain)
+    assert plain_feats.is_ext4 and not plain_feats.shared_blocks
+    assert plain_feats.has_journal
+
+    shared_feats = ext4.read_superblock(shared)
+    assert shared_feats.is_ext4 and shared_feats.shared_blocks
+    assert shared_feats.ro_compat & 0x4000
+    assert shared_feats.read_write_blockers()
+
+    # A non-ext4 blob (or a truncated one) is reported, not raised.
+    junk = d / "junk.bin"
+    junk.write_bytes(b"\x00" * 4096)
+    assert not ext4.read_superblock(junk).is_ext4
+    tiny = d / "tiny.bin"
+    tiny.write_bytes(b"\x00" * 16)
+    assert not ext4.read_superblock(tiny).is_ext4
+    # A file object works too, so callers can read straight out of a zip member.
+    with plain.open("rb") as fp:
+        assert ext4.read_superblock(fp).has_journal
+
+
+def test_ext4_image_refuses_to_edit_a_shared_blocks_image():
+    """`e2fsck -fn` exits 0 on shared_blocks; only the superblock check refuses the write."""
+    from freewheel import ext4
+
+    d = _tmpdir()
+    img_path = d / "mondo.img"
+    # metadata_csum would make the raw RO_COMPAT edit fail a superblock checksum
+    # (there is no e2fsprogs `shared_blocks` creator here), so synthesize without it.
+    if not _ext4_with(img_path, {"/etc/authorized_debug_profile": b"x\n"},
+                      extra_mkfs=("-O", "^metadata_csum")):
+        print("    (skipped: mke2fs not available)")
+        return
+    _mark_shared_blocks(img_path)
+
+    img = ext4.Ext4Image(img_path)
+    assert img.fsck()                       # integrity is fine — that is the trap
+    assert img.path_exists("/etc/authorized_debug_profile")
+
+    for call in (
+        lambda: img.assert_editable(),
+        lambda: img.assert_mountable_read_write(),
+        lambda: img.apply_overlay_and_deletes(delete_paths=["/etc/authorized_debug_profile"]),
+    ):
+        try:
+            call()
+        except ext4.Ext4UnsafeImageError as e:
+            assert "shared_blocks" in str(e)
+        else:
+            raise AssertionError("a shared_blocks image must refuse to be edited or paired rw")
+
+    # Nothing was written: the file is still there.
+    assert ext4.Ext4Image(img_path).path_exists("/etc/authorized_debug_profile")
+
+
+def _package_with_system(
+    dest: Path, *, system_img: bytes, mondo_img: bytes, version: str = "26.11.19.37",
+    inner_data_version: str | None = None, module_version: str | None = None,
+    extra_modules: dict[str, bytes] | None = None, extra_inner: dict[str, bytes] | None = None,
+) -> Path:
+    """A package whose `system.img` / `mondo.img` are real (synthesized) ext4 images.
+
+    `extra_modules` adds further outer-level modules (e.g. an `0301`), which is where a
+    cross-build mix becomes visible in a package's own version strings.
+    """
+    d = dest.parent
+    data_version = inner_data_version if inner_data_version is not None else version
+    parts = {
+        "gpt.conf": b"# gpt\ndevice /dev/mmcblk0\n",
+        "ota_process": _aarch64_elf(),
+        "system.img": system_img,
+        "mondo.img": mondo_img,
+        "vbmeta.img": b"\x00" * 512,
+        "boot.img": b"\x00" * 4096,
+    }
+    if extra_inner:
+        parts.update(extra_inner)
+    data = {
+        "version": data_version,
+        "update_partition": ["ota_process", "system", "mondo"],
+        "partition_info": {
+            name: {"imgname": name,
+                   "md5sum": {name: hashlib.md5(blob).hexdigest()},
+                   "md5_scope": {name: len(blob)}}
+            for name, blob in parts.items() if name.endswith(".img")
+        },
+    }
+    inner = d / f"inner_{version}.zip"
+    with zipfile.ZipFile(inner, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("data.json", json.dumps(data, indent=4))
+        for name, blob in parts.items():
+            zi = zipfile.ZipInfo(name, date_time=(2026, 11, 26, 12, 0, 0))
+            zi.create_system = 3
+            zi.external_attr = (0o100000 | (0o755 if name == "ota_process" else 0o644)) << 16
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(zi, blob)
+
+    inner_bytes = inner.read_bytes()
+    inner_sha = hashlib.sha256(inner_bytes).hexdigest()
+    mod_ver = module_version or version
+    inner_name = f"lz110_0300_V{mod_ver}_20261126.mass.fw.plain.unsign"
+    cfg_name = f"lz110_0000_V{version}_20261126.mass.cfg.plain.unsign"
+
+    fw_entries = [("0300", inner_name, len(inner_bytes), inner_sha)]
+    for name, blob in (extra_modules or {}).items():
+        fw_entries.append(("0301", name, len(blob), hashlib.sha256(blob).hexdigest()))
+
+    cfg = (
+        "[package]\n"
+        f"version = '{version}'\n"
+        "package_id = 'test'\n"
+        "created_at = '2026-11-26T12:00:00Z'\n\n"
+        + "".join(
+            "[[firmwares]]\n"
+            f"part = '{part}'\n"
+            f"device_type = '{'X5' if part == '0300' else 'A350'}'\n"
+            f"size =  {size}\n"
+            f"checksum = 'sha256:{sha}'\n"
+            "priority = 0\n"
+            "required = true\n\n"
+            for part, _n, size, sha in fw_entries
+        )
+        + "[strategy]\n"
+        "max_concurrent = 1\n"
+        "global_timeout = 3600\n"
+    )
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_STORED) as zf:
+        zf.writestr(cfg_name, cfg)
+        for _part, name, _size, _sha in fw_entries:
+            zf.writestr(name, inner_bytes if name == inner_name else (extra_modules or {})[name])
+    return dest
+
+
+def test_guard_refuses_shared_blocks_mondo_under_read_write_system():
+    """The exact pairing that bricked the robot: new read-only mondo, old rw-mounting system."""
+    d = _tmpdir()
+    system = d / "system.img"
+    mondo_ro = d / "mondo_ro.img"
+    mondo_rw = d / "mondo_rw.img"
+    if not (_ext4_with(system, {"/etc/hb-fstab": b"/dev/block/platform/by-name/mondo /md ext4 defaults 0 1\n"})
+            and _ext4_with(mondo_ro) and _ext4_with(mondo_rw)):
+        print("    (skipped: mke2fs not available)")
+        return
+    _mark_shared_blocks(mondo_ro)
+
+    pkg = _package_with_system(d / "V26.11.19.37_lz110_hybrid.zip",
+                               system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes())
+    try:
+        ota.verify_package(pkg)
+    except ota.SafetyValidationError as e:
+        msg = str(e)
+        assert "shared_blocks" in msg and "read-write" in msg, msg
+    else:
+        raise AssertionError("a shared_blocks mondo under a rw-mounting system must be refused")
+
+    # The deliberate override downgrades it to a warning rather than a silent pass, and
+    # the unrelated --allow-unsafe-x5-override must NOT silence it.
+    try:
+        ota.verify_package(pkg, allow_unsafe_x5_override=True)
+    except ota.SafetyValidationError as e:
+        assert "shared_blocks" in str(e)
+    else:
+        raise AssertionError("--allow-unsafe-x5-override must not silence the mondo pairing guard")
+    rep = ota.verify_package(pkg, allow_unsafe_mondo_pairing=True)
+    assert any("shared_blocks" in w for w in rep.warnings), rep.warnings
+
+    # A journaled read-write mondo in the same package is fine.
+    ok_pkg = _package_with_system(d / "V26.11.19.38_lz110_ok.zip", version="26.11.19.38",
+                                  system_img=system.read_bytes(), mondo_img=mondo_rw.read_bytes())
+    assert ota.verify_package(ok_pkg).verified_x5_partitions
+
+
+def test_guard_allows_shared_blocks_mondo_with_read_only_system():
+    """dm-verity era system.img mounts /md `ro,noload`: the shared_blocks pairing is correct there."""
+    d = _tmpdir()
+    system = d / "system.img"
+    mondo_ro = d / "mondo_ro.img"
+    if not (_ext4_with(system, {
+                "/etc/hb-fstab": (
+                    b"/dev/dm-1 /md ext4 ro,noload 0 0\n"
+                    b"/dev/block/platform/by-name/mondo /md ext4 ro 0 0\n")})
+            and _ext4_with(mondo_ro)):
+        print("    (skipped: mke2fs not available)")
+        return
+    _mark_shared_blocks(mondo_ro)
+
+    pkg = _package_with_system(d / "V26.11.19.39_lz110_verity.zip", version="26.11.19.39",
+                               system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes())
+    rep = ota.verify_package(pkg)
+    assert not any("shared_blocks" in w for w in rep.warnings), rep.warnings
+
+
+def test_guard_refuses_mixed_module_builds():
+    d = _tmpdir()
+    system = d / "system.img"
+    mondo = d / "mondo.img"
+    if not (_ext4_with(system, {"/etc/hb-fstab": b"/dev/block/platform/by-name/mondo /md ext4 defaults 0 1\n"})
+            and _ext4_with(mondo)):
+        print("    (skipped: mke2fs not available)")
+        return
+
+    # An 0301 module from a different release than the 0300 is the hybrid signature.
+    mixed = _package_with_system(
+        d / "V26.11.19.40_lz110_mixed.zip", version="26.11.19.40",
+        extra_modules={"lz110_0301_V26.10.27.92_20261028.mass.fw.plain.unsign": b"A350" * 64},
+        system_img=system.read_bytes(), mondo_img=mondo.read_bytes())
+    try:
+        ota.verify_package(mixed)
+    except ota.SafetyValidationError as e:
+        assert "different firmware builds" in str(e)
+    else:
+        raise AssertionError("modules from two releases must be refused")
+    rep = ota.verify_package(mixed, allow_mixed_firmware=True)
+    assert any("mixes modules" in w for w in rep.warnings), rep.warnings
+
+    # A vendor-style package whose module is named after the build it was cut from, not
+    # after [package].version, is normal (V26.11.19.01 shipped a V26.10.27.92 0300 module)
+    # and must NOT be refused.
+    vendor_like = _package_with_system(
+        d / "V26.11.19.41_lz110_vendor.zip", version="26.11.19.41",
+        module_version="26.10.27.92", inner_data_version="26.10.27.92",
+        extra_modules={"lz110_0301_V26.10.27.92_20261028.mass.fw.plain.unsign": b"A350" * 64},
+        system_img=system.read_bytes(), mondo_img=mondo.read_bytes())
+    rep = ota.verify_package(vendor_like)
+    assert rep.verified_x5_partitions
+    assert any("differs from the package version" in w for w in rep.warnings), rep.warnings
+    assert not any("mixes modules" in w for w in rep.warnings), rep.warnings
+
+    # Consistent package: 0300 and 0301 from the same build.
+    good = _package_with_system(
+        d / "V26.11.19.42_lz110_good.zip", version="26.11.19.42",
+        extra_modules={"lz110_0301_V26.11.19.42_20261126.mass.fw.plain.unsign": b"A350" * 64},
+        system_img=system.read_bytes(), mondo_img=mondo.read_bytes())
+    assert ota.verify_package(good).verified_x5_partitions
+
+
+def test_slot_commit_gating_is_detected_and_warned():
+    d = _tmpdir()
+    ungated_script = (
+        "#!/bin/sh\n"
+        "/usr/hobot/bin/ota_tool -b\n"
+    )
+    gated_script = (
+        "#!/bin/sh\n"
+        "if [ -f /run/lz100-mondo-apps-ready ]; then /usr/hobot/bin/ota_tool -b; fi\n"
+    )
+    ungated = d / "system_ungated.img"
+    gated = d / "system_gated.img"
+    other = d / "system_unrelated.img"
+    if not (_ext4_with(ungated, {"/etc/init.d/S99ota_update_check.sh": ungated_script.encode()})
+            and _ext4_with(gated, {"/etc/init.d/S99ota_update_check.sh": gated_script.encode()})
+            and _ext4_with(other, {"/etc/version": b"26.11.19.01\n"})):
+        print("    (skipped: mke2fs not available)")
+        return
+
+    assert ota.slot_commit_gating_from_system_img(ungated) == "ungated"
+    assert ota.slot_commit_gating_from_system_img(gated) == "gated"
+    assert ota.slot_commit_gating_from_system_img(other) == "unknown"
+    assert ota.slot_commit_gating_from_system_img(d / "does-not-exist.img") == "unknown"
+
+    assert ota.format_slot_commit_warning("gated") == ""
+    for state in ("ungated", "unknown"):
+        banner = ota.format_slot_commit_warning(state)
+        assert "###" in banner and "rollback" in banner.lower(), banner
+        assert len(banner.splitlines()) > 6, banner
+    assert "ota_tool -b" in ota.format_slot_commit_warning("ungated")
+    assert "lz100-mondo-apps-ready" in ota.format_slot_commit_warning("unknown")
+
+    # The same detection works through a stock base package (what a build/upload sees).
+    base_zip = d / "base_all_in_one.zip"
+    with zipfile.ZipFile(base_zip, "w", zipfile.ZIP_STORED) as zf:
+        zf.writestr("system.img", ungated.read_bytes())
+    assert ota.slot_commit_gating_from_base_zip(base_zip) == "ungated"
+    assert ota.slot_commit_gating_from_base_zip(None) == "unknown"
+    assert ota.slot_commit_gating_from_base_zip(d / "nope.zip") == "unknown"
+
+
 # ── mock md_upgrade (:8085) — inventory + resumable pull + V2 TUS ────────────
 
 class _MockUpgrade:
