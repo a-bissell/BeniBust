@@ -1867,6 +1867,164 @@ def test_restore_command_construction_and_write():
             os.environ["PATH"] = old
 
 
+def test_restore_pins_mondo_current_to_backup_active_slot():
+    """`mondo current` must restore to the slot that was active when backed up, not the live symlink."""
+    from freewheel import partition_backup
+
+    d = _tmpdir()
+    mondo = d / "mondo_active.img"
+    mondo.write_bytes(b"A" * 2048)
+    probe = partition_backup.RobotBootProbe(
+        firmware_version="V26.11.19.01",
+        cmdline="hobotboot.slot_suffix=_a",
+        active_slot="_a",
+    )
+    manifest = partition_backup.RollbackManifest(
+        created="2026-01-01T00:00:00Z",
+        probe=probe,
+        images=[
+            partition_backup.BackupImageEntry(
+                "mondo", "current", mondo.name, mondo.stat().st_size, ota.sha256_file(mondo)
+            ),
+        ],
+    )
+    backup_dir = d / "rollback"
+    backup_dir.mkdir()
+    (backup_dir / mondo.name).write_bytes(mondo.read_bytes())
+    partition_backup.write_manifest_human(backup_dir, manifest)
+
+    slot_a_dev = d / "dev_mondo_a.img"
+    slot_a_dev.write_bytes(b"\x00" * 2048)
+    symlink_dev = d / "dev_mondo_now.img"
+    symlink_dev.write_bytes(b"\xff" * 2048)
+    nodes = {
+        f"/dev/block/platform/by-name/mondo_a": str(slot_a_dev),
+        f"/dev/block/platform/by-name/mondo": str(symlink_dev),
+    }
+    env = _fake_backup_ssh_env(d, nodes=nodes, cmdline="hobotboot.slot_suffix=_b")
+    old = os.environ.get("PATH")
+    os.environ["PATH"] = env["PATH"]
+    try:
+        partition_backup.execute_restore("127.0.0.1", backup_dir)
+        assert slot_a_dev.read_bytes() == mondo.read_bytes()
+        assert symlink_dev.read_bytes() == b"\xff" * 2048
+    finally:
+        if old is not None:
+            os.environ["PATH"] = old
+
+
+def test_restore_skips_mondo_current_when_explicit_slot_already_planned():
+    from freewheel import partition_backup
+
+    d = _tmpdir()
+    shared = b"S" * 1024
+    mondo_a = d / "mondo_a.img"
+    mondo_active = d / "mondo_active.img"
+    mondo_a.write_bytes(shared)
+    mondo_active.write_bytes(shared)
+    sha = ota.sha256_file(mondo_a)
+    probe = partition_backup.RobotBootProbe(active_slot="_a", firmware_version="V26")
+    manifest = partition_backup.RollbackManifest(
+        created="2026-01-01T00:00:00Z",
+        probe=probe,
+        images=[
+            partition_backup.BackupImageEntry("mondo", "a", mondo_a.name, len(shared), sha),
+            partition_backup.BackupImageEntry("mondo", "current", mondo_active.name, len(shared), sha),
+        ],
+    )
+    backup_dir = d / "rollback"
+    backup_dir.mkdir()
+    for name in (mondo_a.name, mondo_active.name):
+        (backup_dir / name).write_bytes(shared)
+    partition_backup.write_manifest_human(backup_dir, manifest)
+
+    planned = partition_backup.plan_restore(manifest, backup_dir)
+    mondo_targets = [(e.partition, slot) for e, slot in planned if e.partition == "mondo"]
+    assert mondo_targets == [("mondo", "a")]
+
+
+def test_backup_reuse_refused_when_active_slot_changes():
+    from freewheel import partition_backup
+
+    d = _tmpdir()
+    mondo = d / "mondo_active.img"
+    misc = d / "misc_active.img"
+    mondo.write_bytes(b"M" * 512)
+    misc.write_bytes(b"I" * 256)
+    probe = partition_backup.RobotBootProbe(
+        firmware_version="V26.11.19.01",
+        active_slot="_a",
+        misc_hex_preview="00000000  ab cd",
+    )
+    manifest = partition_backup.RollbackManifest(
+        created="2026-01-01T00:00:00Z",
+        probe=probe,
+        images=[
+            partition_backup.BackupImageEntry(
+                "mondo", "current", mondo.name, mondo.stat().st_size, ota.sha256_file(mondo)
+            ),
+            partition_backup.BackupImageEntry(
+                "misc", "current", misc.name, misc.stat().st_size, ota.sha256_file(misc)
+            ),
+        ],
+    )
+    backup_dir = d / "rollback"
+    backup_dir.mkdir()
+    (backup_dir / mondo.name).write_bytes(mondo.read_bytes())
+    (backup_dir / misc.name).write_bytes(misc.read_bytes())
+    partition_backup.write_manifest_human(backup_dir, manifest)
+
+    live = partition_backup.RobotBootProbe(
+        firmware_version="V26.11.19.01",
+        active_slot="_b",
+        misc_hex_preview=probe.misc_hex_preview,
+    )
+    ok, reasons = partition_backup.manifest_has_verified_required(backup_dir, live)
+    assert not ok
+    assert any("active slot" in r for r in reasons)
+
+
+def test_backup_reuse_refused_when_misc_preview_changes():
+    from freewheel import partition_backup
+
+    d = _tmpdir()
+    mondo = d / "mondo_active.img"
+    misc = d / "misc_active.img"
+    mondo.write_bytes(b"M" * 512)
+    misc.write_bytes(b"I" * 256)
+    probe = partition_backup.RobotBootProbe(
+        firmware_version="V26.11.19.01",
+        active_slot="_a",
+        misc_hex_preview="00000000  aa bb",
+    )
+    manifest = partition_backup.RollbackManifest(
+        created="2026-01-01T00:00:00Z",
+        probe=probe,
+        images=[
+            partition_backup.BackupImageEntry(
+                "mondo", "current", mondo.name, mondo.stat().st_size, ota.sha256_file(mondo)
+            ),
+            partition_backup.BackupImageEntry(
+                "misc", "current", misc.name, misc.stat().st_size, ota.sha256_file(misc)
+            ),
+        ],
+    )
+    backup_dir = d / "rollback"
+    backup_dir.mkdir()
+    (backup_dir / mondo.name).write_bytes(mondo.read_bytes())
+    (backup_dir / misc.name).write_bytes(misc.read_bytes())
+    partition_backup.write_manifest_human(backup_dir, manifest)
+
+    live = partition_backup.RobotBootProbe(
+        firmware_version="V26.11.19.01",
+        active_slot="_a",
+        misc_hex_preview="00000000  ff ee",
+    )
+    ok, reasons = partition_backup.manifest_has_verified_required(backup_dir, live)
+    assert not ok
+    assert any("misc boot-state" in r for r in reasons)
+
+
 def test_doctor_backup_reporting():
     from freewheel import partition_backup
 

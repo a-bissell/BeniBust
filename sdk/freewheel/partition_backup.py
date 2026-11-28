@@ -98,6 +98,20 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def active_slot_letter(active_slot: str) -> Optional[str]:
+    """Map cmdline `hobotboot.slot_suffix` (`_a`, `_b`, …) to dump/restore slot `a`|`b`."""
+    if not active_slot:
+        return None
+    letter = active_slot.strip().lstrip("_").lower()
+    if letter in ("a", "b"):
+        return letter
+    return None
+
+
+def _normalize_misc_preview(text: str) -> str:
+    return "\n".join(line.rstrip() for line in text.strip().splitlines() if line.strip())
+
+
 def probe_robot_boot_state(
     host: str,
     *,
@@ -294,6 +308,16 @@ def manifest_has_verified_required(backup_dir: Path, probe: RobotBootProbe) -> T
                 f"manifest firmware {manifest.probe.firmware_version!r} "
                 f"!= robot {probe.firmware_version!r}"
             )
+    if manifest.probe.active_slot or probe.active_slot:
+        if manifest.probe.active_slot != probe.active_slot:
+            reasons.append(
+                f"manifest active slot {manifest.probe.active_slot!r} "
+                f"!= robot {probe.active_slot!r}"
+            )
+    manifest_misc = _normalize_misc_preview(manifest.probe.misc_hex_preview)
+    live_misc = _normalize_misc_preview(probe.misc_hex_preview)
+    if manifest_misc and live_misc and manifest_misc != live_misc:
+        reasons.append("misc boot-state preview differs from the live robot")
     for part, slot in REQUIRED_BACKUPS:
         entry = manifest.find(part, slot)
         if entry is None:
@@ -486,30 +510,54 @@ def restore_partition_image(
     }
 
 
+def _mondo_current_restore_target(manifest: RollbackManifest) -> Optional[str]:
+    """Pin a saved `mondo current` dump to the A/B letter active when it was captured."""
+    letter = active_slot_letter(manifest.probe.active_slot)
+    if letter is not None:
+        return letter
+    for suffix in ("_a", "_b", "a", "b"):
+        if suffix in manifest.probe.cmdline:
+            return suffix[-1]
+    return None
+
+
 def plan_restore(manifest: RollbackManifest, backup_dir: Path) -> List[Tuple[BackupImageEntry, str]]:
     """Return (entry, target_slot) pairs in restore order (misc last before reboot)."""
-    order: List[Tuple[str, str]] = []
-    for slot in ("a", "b"):
-        if manifest.find("mondo", slot):
-            order.append(("mondo", slot))
-    if manifest.find("mondo", "current"):
-        order.append(("mondo", "current"))
-    if manifest.find("hbre", "a"):
-        order.append(("hbre", "a"))
-    if manifest.find("hbre", "b"):
-        order.append(("hbre", "b"))
-    if manifest.find("misc", "current"):
-        order.append(("misc", "current"))
-
     planned: List[Tuple[BackupImageEntry, str]] = []
-    for part, slot in order:
-        entry = manifest.find(part, slot)
+    planned_keys: set[Tuple[str, str]] = set()
+
+    def _add(part: str, manifest_slot: str, target_slot: str) -> None:
+        key = (part, target_slot)
+        if key in planned_keys:
+            return
+        entry = manifest.find(part, manifest_slot)
         if entry is None:
-            continue
+            return
         ok, detail = _verify_image_on_disk(entry, backup_dir)
         if not ok:
             raise PartitionBackupError(detail)
-        planned.append((entry, slot))
+        planned.append((entry, target_slot))
+        planned_keys.add(key)
+
+    for slot in ("a", "b"):
+        if manifest.find("mondo", slot):
+            _add("mondo", slot, slot)
+
+    mondo_current = manifest.find("mondo", "current")
+    if mondo_current is not None:
+        letter = _mondo_current_restore_target(manifest)
+        if letter is not None and (("mondo", letter) in planned_keys):
+            pass  # explicit slot image already covers the active mondo from backup time
+        elif letter is not None:
+            _add("mondo", "current", letter)
+        else:
+            _add("mondo", "current", "current")
+
+    for slot in ("a", "b"):
+        if manifest.find("hbre", slot):
+            _add("hbre", slot, slot)
+    if manifest.find("misc", "current"):
+        _add("misc", "current", "current")
     return planned
 
 
@@ -526,9 +574,11 @@ def describe_restore_plan(
         f"  after restore the bootloader still boots the slot in misc/cmdline — verify with /proc/cmdline.",
         "  partitions to write:",
     ]
-    for entry, slot in planned:
+    for entry, target_slot in planned:
+        src_slot = entry.slot
+        slot_note = f"{target_slot}" if target_slot == src_slot else f"{src_slot} -> by-name/…_{target_slot}"
         lines.append(
-            f"    - {entry.partition} slot={slot} -> {entry.filename} "
+            f"    - {entry.partition} slot={slot_note} -> {entry.filename} "
             f"({entry.bytes:,} B, sha256 {entry.sha256[:16]}…)"
         )
     if not planned:
