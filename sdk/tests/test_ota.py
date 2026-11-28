@@ -617,7 +617,11 @@ def test_guard_refuses_shared_blocks_mondo_under_read_write_system():
         assert "shared_blocks" in str(e)
     else:
         raise AssertionError("--allow-unsafe-x5-override must not silence the mondo pairing guard")
-    rep = ota.verify_package(pkg, allow_unsafe_mondo_pairing=True)
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.37",
+        system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes(),
+    )
+    rep = ota.verify_package(pkg, allow_unsafe_mondo_pairing=True, base_zip_path=base)
     assert any("shared_blocks" in w for w in rep.warnings), rep.warnings
 
     # A journaled read-write mondo in the same package is fine.
@@ -640,9 +644,14 @@ def test_guard_allows_shared_blocks_mondo_with_read_only_system():
         return
     _mark_shared_blocks(mondo_ro)
 
+    stock = mondo_ro.read_bytes()
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.39",
+        system_img=system.read_bytes(), mondo_img=stock,
+    )
     pkg = _package_with_system(d / "V26.11.19.39_lz110_verity.zip", version="26.11.19.39",
-                               system_img=system.read_bytes(), mondo_img=mondo_ro.read_bytes())
-    rep = ota.verify_package(pkg)
+                               system_img=system.read_bytes(), mondo_img=stock)
+    rep = ota.verify_package(pkg, base_zip_path=base)
     assert not any("shared_blocks" in w for w in rep.warnings), rep.warnings
 
 
@@ -760,6 +769,237 @@ def test_slot_commit_gating_is_detected_and_warned():
         system_img=ungated.read_bytes(), mondo_img=mondo.read_bytes())
     assert ota.SYSTEM_IMG not in zipfile.ZipFile(nested_outer).namelist()
     assert ota.slot_commit_gating_from_base_zip(nested_outer) == "ungated"
+
+
+# ── dm-verity / vbmeta mondo patch guard ─────────────────────────────────────
+
+def _be64(v: int) -> bytes:
+    return struct.pack(">Q", v)
+
+
+def _be32(v: int) -> bytes:
+    return struct.pack(">I", v)
+
+
+def _wire_hashtree_descriptor(partition: str, *, salt: bytes = b"\xaa" * 32,
+                              root: bytes = b"\xbb" * 32) -> bytes:
+    """One serialized descriptor (header + body), libavb wire format."""
+    name = partition.encode("utf-8")
+    algo = b"sha256".ljust(32, b"\x00")
+    body = (
+        _be32(0)
+        + _be64(1 << 20) + _be64(0) + _be64(0)
+        + _be32(4096) + _be32(4096) + _be32(0) + _be64(0) + _be64(0)
+        + algo
+        + _be32(len(name)) + _be32(len(salt)) + _be32(len(root))
+        + _be32(0)
+        + b"\x00" * 60
+        + name + salt + root
+    )
+    # body length must be a multiple of 8 per AvbDescriptor rules
+    pad = (8 - (len(body) % 8)) % 8
+    body += b"\x00" * pad
+    tag = 1  # AVB_DESCRIPTOR_TAG_HASHTREE
+    return _be64(tag) + _be64(len(body)) + body
+
+
+def _wire_hash_descriptor(partition: str, *, salt: bytes = b"\xcc" * 32,
+                           digest: bytes = b"\xdd" * 32) -> bytes:
+    name = partition.encode("utf-8")
+    algo = b"sha256".ljust(32, b"\x00")
+    body = (
+        _be64(1 << 20)
+        + algo
+        + _be32(len(name)) + _be32(len(salt)) + _be32(len(digest))
+        + _be32(0)
+        + b"\x00" * 60
+        + name + salt + digest
+    )
+    pad = (8 - (len(body) % 8)) % 8
+    body += b"\x00" * pad
+    return _be64(2) + _be64(len(body)) + body
+
+
+def _synthetic_vbmeta(*descriptors: bytes) -> bytes:
+    """Minimal vbmeta image: header (BE) + auxiliary block (64-byte aligned)."""
+    table = b"".join(descriptors)
+    aux_size = ((len(table) + 63) // 64) * 64
+    aux = table + b"\x00" * (aux_size - len(table))
+    header = bytearray(256)
+    header[0:4] = b"AVB0"
+    struct.pack_into(">II", header, 4, 1, 0)
+    struct.pack_into(">Q", header, 12, 0)           # authentication_data_block_size
+    struct.pack_into(">Q", header, 20, aux_size)    # auxiliary_data_block_size
+    struct.pack_into(">Q", header, 96, 0)           # descriptors_offset (into aux)
+    struct.pack_into(">Q", header, 104, len(table))  # descriptors_size
+    return bytes(header) + aux
+
+
+def test_avb_vbmeta_parser_synthetic():
+    from freewheel import avb
+
+    mondo_tree = _wire_hashtree_descriptor("mondo")
+    system_tree = _wire_hashtree_descriptor("system")
+    blob = _synthetic_vbmeta(mondo_tree, system_tree)
+    rep = avb.parse_vbmeta(blob)
+    assert rep.status == "ok"
+    assert rep.mondo_hashtree and not rep.mondo_hash
+    assert "system" in rep.hashtree_partitions and "mondo" in rep.hashtree_partitions
+
+    hash_only = _wire_hash_descriptor("boot")
+    rep2 = avb.parse_vbmeta(_synthetic_vbmeta(hash_only))
+    assert rep2.status == "ok" and not rep2.mondo_hashtree and rep2.hash_partitions == ("boot",)
+
+    rep3 = avb.parse_vbmeta(b"not-avb")
+    assert rep3.status == "unparseable"
+    rep4 = avb.parse_vbmeta(blob[:200])
+    assert rep4.status == "unparseable"
+
+    # Little-endian legacy layout must not parse as ok with mondo present (regression).
+    le_table = struct.pack("<QQ", 1, 68) + b"\x00" * 68 + b"mondo\x00" + b"\x00" * 27
+    le_header = bytearray(256)
+    le_header[0:4] = b"AVB0"
+    struct.pack_into("<QQ", le_header, 12, 0, len(le_table))
+    struct.pack_into("<II", le_header, 64, 0, len(le_table))
+    rep_le = avb.parse_vbmeta(bytes(le_header) + le_table)
+    assert rep_le.status != "ok" or not rep_le.mondo_hashtree, rep_le
+
+    garbage_table = mondo_tree + b"\xff" * 4
+    header = bytearray(256)
+    header[0:4] = b"AVB0"
+    struct.pack_into(">Q", header, 12, 0)
+    struct.pack_into(">Q", header, 20, len(garbage_table))
+    struct.pack_into(">Q", header, 96, 0)
+    struct.pack_into(">Q", header, 104, len(garbage_table))
+    assert avb.parse_vbmeta(bytes(header) + garbage_table).status == "unparseable"
+
+
+def test_guard_refuses_verity_covered_mondo_patch():
+    """A modified mondo.img under vbmeta hashtree metadata must refuse (distinct from shared_blocks)."""
+    from freewheel import avb
+
+    d = _tmpdir()
+    mondo = d / "mondo.img"
+    system = d / "system.img"
+    if not (_ext4_with(mondo, {"/bin/ota_tool": _aarch64_elf(128)})
+            and _ext4_with(system, {"/etc/hb-fstab": b"/dev/dm-1 /md ext4 ro,noload 0 0\n"})):
+        print("    (skipped: mke2fs not available)")
+        return
+
+    vbmeta = _synthetic_vbmeta(_wire_hashtree_descriptor("mondo"), _wire_hashtree_descriptor("system"))
+    stock = mondo.read_bytes()
+    patched = bytearray(stock)
+    patched[4096] ^= 0x55
+
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.50",
+        system_img=system.read_bytes(), mondo_img=stock,
+        extra_inner={"vbmeta.img": vbmeta},
+    )
+    pkg = _package_with_system(
+        d / "V26.11.19.50_lz110_verity_mondo.zip", version="26.11.19.50",
+        system_img=system.read_bytes(), mondo_img=bytes(patched),
+        extra_inner={"vbmeta.img": vbmeta},
+    )
+    try:
+        ota.verify_package(pkg, base_zip_path=base)
+    except ota.SafetyValidationError as e:
+        msg = str(e)
+        assert "dm-verity" in msg and "root hash" in msg, msg
+        assert "dm-verity-corrupted" in msg or "dm-verity protected" in msg, msg
+    else:
+        raise AssertionError("modified mondo on a verity-covered slot must be refused")
+
+    try:
+        ota.verify_package(pkg, base_zip_path=base, allow_unsafe_x5_override=True)
+    except ota.SafetyValidationError as e:
+        assert "dm-verity" in str(e)
+    else:
+        raise AssertionError("--allow-unsafe-x5-override must not silence the verity patch guard")
+
+    rep = ota.verify_package(pkg, base_zip_path=base, allow_verity_patch=True)
+    assert any("allow-verity-patch" in w.lower() or "verity-patch" in w for w in rep.warnings), rep.warnings
+    assert rep.mondo_verity_covered is True
+    assert any("hashtree" in s.lower() or "vbmeta" in s.lower() for s in rep.mondo_verity_evidence)
+
+    # Unchanged mondo against the same base is fine even with hashtree metadata present.
+    ok_pkg = _package_with_system(
+        d / "V26.11.19.51_lz110_verity_ok.zip", version="26.11.19.51",
+        system_img=system.read_bytes(), mondo_img=stock,
+        extra_inner={"vbmeta.img": vbmeta},
+    )
+    assert ota.verify_package(ok_pkg, base_zip_path=base).verified_x5_partitions
+
+
+def test_guard_refuses_verity_covered_mondo_without_baseline():
+    """Without --base we cannot prove mondo is stock; refuse when vbmeta says dm-verity."""
+    d = _tmpdir()
+    mondo = d / "mondo.img"
+    if not _ext4_with(mondo, {"/bin/ota_tool": _aarch64_elf(128)}):
+        print("    (skipped: mke2fs not available)")
+        return
+    vbmeta = _synthetic_vbmeta(_wire_hashtree_descriptor("mondo"))
+    pkg = _package_with_system(
+        d / "V26.11.19.53_lz110_nobase.zip", version="26.11.19.53",
+        system_img=b"\x00" * 8192,
+        mondo_img=mondo.read_bytes(),
+        extra_inner={"vbmeta.img": vbmeta},
+    )
+    try:
+        ota.verify_package(pkg)
+    except ota.SafetyValidationError as e:
+        assert "no usable --base" in str(e) or "baseline" in str(e).lower(), str(e)
+    else:
+        raise AssertionError("verity-covered mondo without baseline must be refused")
+    rep = ota.verify_package(pkg, allow_verity_patch=True)
+    assert any("baseline unknown" in w.lower() for w in rep.warnings), rep.warnings
+
+
+def test_guard_verity_evidence_shared_blocks_and_conf_paths():
+    d = _tmpdir()
+    mondo = d / "mondo.img"
+    system = d / "system.img"
+    if not (_ext4_with(mondo) and _ext4_with(system, {"/etc/lz100-mondo-verity.conf": b"enabled=1\n"})):
+        print("    (skipped: mke2fs not available)")
+        return
+    _mark_shared_blocks(mondo)
+    stock, patched = mondo.read_bytes(), bytearray(mondo.read_bytes())
+    patched[8192] ^= 0x0f
+
+    base = _package_with_system(
+        d / "base_all_in_one.zip", version="26.11.19.52",
+        system_img=system.read_bytes(), mondo_img=stock,
+    )
+    pkg = _package_with_system(
+        d / "V26.11.19.52_lz110_shared_verity.zip", version="26.11.19.52",
+        system_img=system.read_bytes(), mondo_img=bytes(patched),
+    )
+    try:
+        ota.verify_package(pkg, base_zip_path=base)
+    except ota.SafetyValidationError as e:
+        msg = str(e)
+        assert "dm-verity" in msg or "shared_blocks" in msg, msg
+    else:
+        raise AssertionError("modified shared_blocks mondo must refuse")
+
+
+def test_ext4_refuses_mondo_verity_conf_without_shared_blocks():
+    from freewheel import ext4
+
+    d = _tmpdir()
+    img = d / "mondo.img"
+    if not _ext4_with(img, {"/etc/lz100-mondo-avb": b"ro,noload\n"},
+                      extra_mkfs=("-O", "^metadata_csum")):
+        print("    (skipped: mke2fs not available)")
+        return
+    image = ext4.Ext4Image(img)
+    try:
+        image.assert_mondo_patchable()
+    except ext4.Ext4UnsafeImageError as e:
+        assert "dm-verity" in str(e) and "lz100-mondo-avb" in str(e)
+    else:
+        raise AssertionError("verity config on mondo must refuse patch")
+    image.assert_mondo_patchable(allow_verity_patch=True)
 
 
 # ── mock md_upgrade (:8085) — inventory + resumable pull + V2 TUS ────────────

@@ -31,6 +31,11 @@ _E2FS_SEARCH_DIRS = (
 )
 
 _MIN_FREE_INODES = 32
+
+MOND_VERITY_CONF_PATHS = (
+    "/etc/lz100-mondo-verity.conf",
+    "/etc/lz100-mondo-avb",
+)
 _STAT_INODE_RE = re.compile(
     r"Inode:\s*(?P<inode>\d+)\s+Type:\s*(?P<type>\S+)\s+Mode:\s*(?P<mode>[0-7]+)"
 )
@@ -240,6 +245,40 @@ class Ext4Image:
         """Superblock feature words, read directly (works without `dumpe2fs`)."""
         return read_superblock(self.path)
 
+    def mondo_dm_verity_reasons(self, *, vbmeta_blob: Optional[bytes] = None) -> List[str]:
+        """Non-shared_blocks dm-verity signals inside this image (config files, vbmeta)."""
+        from . import avb
+
+        reasons: List[str] = []
+        for conf in MOND_VERITY_CONF_PATHS:
+            if self.path_exists(conf):
+                reasons.append(f"contains {conf}")
+        if vbmeta_blob:
+            vb = avb.parse_vbmeta(vbmeta_blob)
+            if vb.mondo_hashtree:
+                reasons.append("vbmeta AvbHashtreeDescriptor names mondo")
+            if vb.mondo_hash:
+                reasons.append("vbmeta AvbHashDescriptor names mondo")
+        return reasons
+
+    def assert_mondo_patchable(self, *, vbmeta_blob: Optional[bytes] = None,
+                               allow_verity_patch: bool = False) -> None:
+        """Refuse in-place `mondo.img` edits when dm-verity metadata says the slot is verified.
+
+        Distinct from `assert_editable()` (shared_blocks). Only `--allow-verity-patch` bypasses this.
+        """
+        reasons = self.mondo_dm_verity_reasons(vbmeta_blob=vbmeta_blob)
+        if not reasons:
+            return
+        if allow_verity_patch:
+            return
+        raise Ext4UnsafeImageError(
+            f"refusing to modify {self.path.name}: dm-verity protected ({'; '.join(reasons)}). "
+            "In-place edits change image bytes so the hash tree no longer matches the root hash in vbmeta; "
+            "the kernel reports dm-verity-corrupted, refuses to mount /md, and the bootloader may roll "
+            "the slot back. Pass allow_verity_patch=True only when rebuilding vbmeta and accepting brick risk."
+        )
+
     def assert_editable(self) -> Ext4Features:
         """Refuse to edit a filesystem that cannot be mounted read-write.
 
@@ -374,8 +413,12 @@ class Ext4Image:
         *,
         min_free_bytes: Optional[int] = None,
         verify_readback: bool = True,
+        allow_verity_patch: bool = False,
+        vbmeta_blob: Optional[bytes] = None,
     ) -> Dict[str, int]:
         """Apply file deletions and a directory overlay onto the ext4 image with SHA-256 readback."""
+        if self.path.name == "mondo.img":
+            self.assert_mondo_patchable(vbmeta_blob=vbmeta_blob, allow_verity_patch=allow_verity_patch)
         self.assert_editable()
         stats = self.get_fs_stats()
         default_reserve = min(32 * 1024 * 1024, int(stats.total_bytes * 0.03))

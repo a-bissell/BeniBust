@@ -983,6 +983,9 @@ class PackageVerificationReport:
     verified_x5_partitions: List[str] = field(default_factory=list)
     ota_process_mode: Optional[int] = None
     warnings: List[str] = field(default_factory=list)
+    mondo_verity_covered: Optional[bool] = None
+    mondo_verity_evidence: List[str] = field(default_factory=list)
+    mondo_verity_vbmeta_status: str = ""
 
 
 def verify_aarch64_elf_header(hdr: bytes, label: str) -> None:
@@ -1229,6 +1232,156 @@ def check_mondo_read_write_pairing(x5: zipfile.ZipFile, *, allow_override: bool 
     )
 
 
+VBMETA_IMG = "vbmeta.img"
+MONDO_VERITY_CONF_PATHS = (
+    "/etc/lz100-mondo-verity.conf",
+    "/etc/lz100-mondo-avb",
+)
+
+MONDO_VERITY_PATCH_REFUSAL = (
+    "refusing to modify {target}: {mondo_img} is dm-verity protected ({evidence}). "
+    "In-place edits change image bytes so the hash tree no longer matches the root hash in vbmeta; "
+    "the kernel reports dm-verity-corrupted, refuses to mount /md, and the bootloader may roll the "
+    "slot back — or leave the robot without /md. Pass --allow-verity-patch only if you are "
+    "rebuilding vbmeta and accept bricking risk."
+)
+
+
+def _x5_image_has_path(x5: zipfile.ZipFile, image: str, remote_path: str) -> bool:
+    from . import ext4
+
+    if image not in x5.namelist():
+        return False
+    with tempfile.TemporaryDirectory(prefix="fw_verity_") as tmp:
+        local = Path(tmp) / Path(image).name
+        with x5.open(image, "r") as src, local.open("wb") as dst:
+            for chunk in iter(lambda: src.read(STREAM_CHUNK), b""):
+                dst.write(chunk)
+        try:
+            return ext4.Ext4Image(local).path_exists(remote_path)
+        except Exception:  # noqa: BLE001
+            return False
+
+
+def _read_x5_vbmeta(x5: zipfile.ZipFile, *, max_bytes: int = 1 << 20) -> bytes:
+    if VBMETA_IMG not in x5.namelist():
+        return b""
+    with x5.open(VBMETA_IMG, "r") as fp:
+        return fp.read(max_bytes)
+
+
+def collect_mondo_verity_evidence(
+    x5: zipfile.ZipFile,
+    vbmeta_blob: Optional[bytes] = None,
+):
+    """Gather dm-verity signals for `mondo` from vbmeta + ext4 images inside one 0300 zip."""
+    from . import avb
+    from .avb import MondoVerityEvidence
+
+    sources: List[str] = []
+    feats = x5_image_features(x5, MONDO_IMG)
+    if feats is not None and feats.shared_blocks:
+        sources.append(f"{MONDO_IMG} superblock shared_blocks (RO_COMPAT 0x4000)")
+
+    for conf in MONDO_VERITY_CONF_PATHS:
+        if _x5_image_has_path(x5, SYSTEM_IMG, conf):
+            sources.append(f"{SYSTEM_IMG} contains {conf}")
+        if _x5_image_has_path(x5, MONDO_IMG, conf):
+            sources.append(f"{MONDO_IMG} contains {conf}")
+
+    blob = vbmeta_blob if vbmeta_blob is not None else _read_x5_vbmeta(x5)
+    vb = avb.parse_vbmeta(blob) if blob else avb.VbmetaParseResult(status="empty")
+    if vb.status == "ok":
+        if vb.mondo_hashtree:
+            sources.append("vbmeta AvbHashtreeDescriptor names mondo")
+        if vb.mondo_hash:
+            sources.append("vbmeta AvbHashDescriptor names mondo")
+
+    return MondoVerityEvidence(sources=sources, vbmeta=vb)
+
+
+def mondo_baseline_usable(base_crcs: Dict[str, Tuple[int, int]]) -> bool:
+    """True when we can compare this package's `mondo.img` against a stock baseline."""
+    return bool(base_crcs) and MONDO_IMG in base_crcs
+
+
+def mondo_img_differs_from_base(x5: zipfile.ZipFile, base_crcs: Dict[str, Tuple[int, int]]) -> Optional[bool]:
+    """Whether `mondo.img` changed vs base, or `None` when baseline is unknown."""
+    if MONDO_IMG not in x5.namelist():
+        return None
+    if not mondo_baseline_usable(base_crcs):
+        return None
+    zi = x5.getinfo(MONDO_IMG)
+    return (zi.CRC, zi.file_size) != base_crcs[MONDO_IMG]
+
+
+MONDO_VERITY_BASELINE_UNKNOWN = (
+    "refusing package: {mondo_img} is dm-verity protected ({evidence}) but no usable --base "
+    "firmware was supplied to confirm whether {mondo_img} is still the stock image. Without a "
+    "baseline we cannot tell whether an in-place edit would change the hash tree and trigger "
+    "dm-verity-corrupted / slot rollback. Pass the stock all_in_one.zip with --base, or "
+    "--allow-verity-patch only if you accept bricking risk."
+)
+
+
+def check_mondo_verity_patch(
+    x5: zipfile.ZipFile,
+    base_crcs: Dict[str, Tuple[int, int]],
+    *,
+    allow_verity_patch: bool = False,
+    evidence: Optional[Any] = None,
+) -> List[str]:
+    """Refuse patching `mondo.img` when dm-verity evidence says the slot is verified.
+
+    Distinct from `check_mondo_read_write_pairing` and from `--allow-unsafe-x5-override`.
+    """
+    if MONDO_IMG not in x5.namelist():
+        return []
+    ev = evidence if evidence is not None else collect_mondo_verity_evidence(x5)
+    if not ev.covered:
+        return []
+
+    differs = mondo_img_differs_from_base(x5, base_crcs)
+    if differs is None:
+        if allow_verity_patch:
+            return [
+                f"{MONDO_IMG} dm-verity covered but baseline unknown "
+                f"(overridden with --allow-verity-patch): {ev.summary()}"
+            ]
+        raise SafetyValidationError(
+            MONDO_VERITY_BASELINE_UNKNOWN.format(mondo_img=MONDO_IMG, evidence=ev.summary())
+        )
+    if not differs:
+        return []
+
+    if allow_verity_patch:
+        return [
+            f"{MONDO_IMG} was modified on a dm-verity-covered slot "
+            f"(overridden with --allow-verity-patch): {ev.summary()}"
+        ]
+    raise SafetyValidationError(
+        MONDO_VERITY_PATCH_REFUSAL.format(target="package", mondo_img=MONDO_IMG, evidence=ev.summary())
+    )
+
+
+def assess_mondo_verity_from_base_zip(base_zip: Optional[str | Path]) -> Optional[Any]:
+    """Verdict for `doctor` and advisory reports from a stock `all_in_one.zip`."""
+    if base_zip is None:
+        return None
+    base = Path(base_zip)
+    if not base.is_file() or not zipfile.is_zipfile(base):
+        return None
+    try:
+        with zipfile.ZipFile(base) as bzf:
+            inner = [n for n in bzf.namelist() if "_0300_" in n and n.endswith(".mass.fw.plain.unsign")]
+            if not inner:
+                return None
+            with tempfile.TemporaryFile() as spool, _open_nested_zip(bzf, inner[0], spool) as x5:
+                return collect_mondo_verity_evidence(x5)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 _INNER_VERSIONED_IMG_RE = re.compile(r".*_V(?P<version>\d+\.\d+\.\d+\.\d+)_\d{8,}\.(?:img|bin)")
 
 
@@ -1427,9 +1580,11 @@ def _verify_outer_modules(zf: zipfile.ZipFile, entries: List[str], manifest_name
 def _verify_inner_x5(zf: zipfile.ZipFile, x5_entry: str, base_crcs: Dict[str, Tuple[int, int]], *,
                      allow_unsafe: bool, allow_mixed_firmware: bool = False,
                      allow_unsafe_mondo_pairing: bool = False,
+                     allow_verity_patch: bool = False,
                      manifest_version: str = "",
                      module_version_claims: Optional[List[Tuple[str, str]]] = None,
-                     warnings: Optional[List[str]] = None) -> Tuple[List[str], Optional[int]]:
+                     warnings: Optional[List[str]] = None,
+                     verity_report: Optional[Dict[str, Any]] = None) -> Tuple[List[str], Optional[int]]:
     parts: List[str] = []
     ota_mode: Optional[int] = None
     warnings = warnings if warnings is not None else []
@@ -1496,6 +1651,17 @@ def _verify_inner_x5(zf: zipfile.ZipFile, x5_entry: str, base_crcs: Dict[str, Tu
         warnings.extend(check_module_build_consistency(module_version_claims,
                                                       allow_override=allow_mixed_firmware))
         warnings.extend(check_mondo_read_write_pairing(x5, allow_override=allow_unsafe_mondo_pairing))
+        verity_ev = collect_mondo_verity_evidence(x5)
+        if verity_report is not None:
+            verity_report["covered"] = verity_ev.covered
+            verity_report["sources"] = list(verity_ev.sources)
+            verity_report["vbmeta_status"] = (
+                f"{verity_ev.vbmeta.status}"
+                + (f" ({verity_ev.vbmeta.detail})" if verity_ev.vbmeta and verity_ev.vbmeta.detail else "")
+            )
+        warnings.extend(check_mondo_verity_patch(
+            x5, base_crcs, allow_verity_patch=allow_verity_patch, evidence=verity_ev,
+        ))
     return parts, ota_mode
 
 
@@ -1503,6 +1669,7 @@ def verify_package(zip_path: str | Path, *, base_zip_path: Optional[str | Path] 
                    allow_unsafe_x5_override: bool = False,
                    allow_mixed_firmware: bool = False,
                    allow_unsafe_mondo_pairing: bool = False,
+                   allow_verity_patch: bool = False,
                    logical_filename: Optional[str] = None) -> PackageVerificationReport:
     """Structurally verify an OTA `.zip`: manifest, module SHA-256, inner MD5 scopes, perms, protected files."""
     pkg = Path(zip_path)
@@ -1546,19 +1713,25 @@ def verify_package(zip_path: str | Path, *, base_zip_path: Optional[str | Path] 
 
         x5_parts: List[str] = []
         ota_mode: Optional[int] = None
+        verity_report: Dict[str, Any] = {}
         if x5_entry is not None:
             x5_parts, ota_mode = _verify_inner_x5(
                 zf, x5_entry, base_crcs, allow_unsafe=allow_unsafe_x5_override,
                 allow_mixed_firmware=allow_mixed_firmware,
                 allow_unsafe_mondo_pairing=allow_unsafe_mondo_pairing,
+                allow_verity_patch=allow_verity_patch,
                 manifest_version=version,
                 module_version_claims=module_claims, warnings=warnings,
+                verity_report=verity_report,
             )
 
     return PackageVerificationReport(
         zip_path=pkg, package_version=version, manifest_name=manifest, x5_entry_name=x5_entry,
         verified_modules=modules, verified_x5_partitions=x5_parts, ota_process_mode=ota_mode,
         warnings=warnings,
+        mondo_verity_covered=verity_report.get("covered"),
+        mondo_verity_evidence=list(verity_report.get("sources") or []),
+        mondo_verity_vbmeta_status=str(verity_report.get("vbmeta_status") or ""),
     )
 
 
@@ -2025,6 +2198,7 @@ def upload_firmware(zip_path: str | Path, *, host: str = "192.168.7.1", port: in
                     allow_unsafe_x5_override: bool = False,
                     allow_mixed_firmware: bool = False,
                     allow_unsafe_mondo_pairing: bool = False,
+                    allow_verity_patch: bool = False,
                     min_battery_pct: int = MIN_SAFE_BATTERY_PCT, ignore_battery: bool = False,
                     max_retries: int = 2, timeout: float = 600.0, chunk_size: int = 4 * STREAM_CHUNK,
                     identity: Optional[str] = None,
@@ -2046,6 +2220,7 @@ def upload_firmware(zip_path: str | Path, *, host: str = "192.168.7.1", port: in
                                 allow_unsafe_x5_override=allow_unsafe_x5_override,
                                 allow_mixed_firmware=allow_mixed_firmware,
                                 allow_unsafe_mondo_pairing=allow_unsafe_mondo_pairing,
+                                allow_verity_patch=allow_verity_patch,
                                 logical_filename=filename)
         warnings.extend(report.warnings)
 
@@ -2223,6 +2398,16 @@ def _doctor() -> int:
             hbre = None
     rows.append(("hbre.img", hbre is not None, hbre_detail))
 
+    verity_ev = assess_mondo_verity_from_base_zip(base if base.is_file() else None)
+    if verity_ev is None:
+        rows.append(("mondo dm-verity", False,
+                     "unknown — pull base all_in_one.zip to inspect vbmeta + mondo.img"))
+    else:
+        detail = verity_ev.format_report_line()
+        if verity_ev.covered:
+            detail += " | in-place mondo.img patches are refused without --allow-verity-patch"
+        rows.append(("mondo dm-verity", True, detail))
+
     ok_all = True
     for label, good, detail in rows:
         mark = "ok  " if good else "--  "
@@ -2315,6 +2500,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                        help="permit a package whose modules come from different firmware builds")
     p_ver.add_argument("--allow-unsafe-mondo-pairing", action="store_true",
                        help="permit a shared_blocks mondo.img under a read-write-mounting system.img")
+    p_ver.add_argument("--allow-verity-patch", action="store_true",
+                       help="permit modifying dm-verity-covered mondo.img (brick risk)")
 
     p_up = sub.add_parser("upload", help="Upload (and optionally install) a package")
     p_up.add_argument("package")
@@ -2331,6 +2518,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                       help="permit uploading a package whose modules come from different builds")
     p_up.add_argument("--allow-unsafe-mondo-pairing", action="store_true",
                       help="permit uploading a shared_blocks mondo.img under a rw-mounting system.img")
+    p_up.add_argument("--allow-verity-patch", action="store_true",
+                      help="permit uploading a package that modified dm-verity-covered mondo.img")
     p_up.add_argument("--no-verify", action="store_true", help="skip the pre-upload package validation")
     p_up.add_argument("--ignore-battery", action="store_true")
     p_up.add_argument("--install", action="store_true", help="trigger the install once the robot says READY")
@@ -2472,11 +2661,18 @@ def main(argv: Optional[List[str]] = None) -> int:
             report = verify_package(args.package, base_zip_path=args.base,
                                     allow_unsafe_x5_override=args.allow_unsafe_x5_override,
                                     allow_mixed_firmware=args.allow_mixed_firmware,
-                                    allow_unsafe_mondo_pairing=args.allow_unsafe_mondo_pairing)
+                                    allow_unsafe_mondo_pairing=args.allow_unsafe_mondo_pairing,
+                                    allow_verity_patch=args.allow_verity_patch)
             print(f"  [+] {report.zip_path.name}: V{report.package_version}")
             print(f"      manifest: {report.manifest_name}")
             print(f"      modules verified: {report.verified_modules}")
             print(f"      0300 partitions verified: {report.verified_x5_partitions}")
+            if report.mondo_verity_covered is not None:
+                cov = "COVERED" if report.mondo_verity_covered else "not covered"
+                print(f"      mondo dm-verity: {cov}"
+                      + (f" ({'; '.join(report.mondo_verity_evidence)})" if report.mondo_verity_evidence else ""))
+                if report.mondo_verity_vbmeta_status:
+                    print(f"      vbmeta parse: {report.mondo_verity_vbmeta_status}")
             if report.ota_process_mode is not None:
                 print(f"      ota_process mode: {oct(report.ota_process_mode)}")
             for w in report.warnings:
@@ -2497,6 +2693,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 identity=args.identity, base_zip_path=args.base,
                 allow_mixed_firmware=args.allow_mixed_firmware,
                 allow_unsafe_mondo_pairing=args.allow_unsafe_mondo_pairing,
+                allow_verity_patch=args.allow_verity_patch,
                 verify_before_upload=not args.no_verify, ignore_battery=args.ignore_battery,
                 progress=_bar(Path(args.package).name), log=lambda m: print(f"  [*] {m}"),
             )

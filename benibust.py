@@ -517,6 +517,12 @@ global_timeout = 3600
         )
         for w in report.warnings:
             warn(w)
+        if report.mondo_verity_covered is not None:
+            state = "covered" if report.mondo_verity_covered else "not covered"
+            detail = "; ".join(report.mondo_verity_evidence) if report.mondo_verity_evidence else "no signals"
+            info(f"mondo dm-verity: {state} ({detail})")
+            if report.mondo_verity_vbmeta_status:
+                info(f"vbmeta: {report.mondo_verity_vbmeta_status}")
         ok(f"verified: {report.verified_modules} module(s), "
            f"partitions {report.verified_x5_partitions}")
     except Exception as e:
