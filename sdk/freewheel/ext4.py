@@ -14,11 +14,12 @@ import os
 import posixpath
 import re
 import shutil
+import struct
 import subprocess
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import BinaryIO, Dict, Iterable, List, Optional
 
 _E2FS_SEARCH_DIRS = (
     "/opt/homebrew/opt/e2fsprogs/sbin",
@@ -34,6 +35,91 @@ _STAT_INODE_RE = re.compile(
     r"Inode:\s*(?P<inode>\d+)\s+Type:\s*(?P<type>\S+)\s+Mode:\s*(?P<mode>[0-7]+)"
 )
 _STAT_SIZE_RE = re.compile(r"Size:\s*(?P<size>\d+)")
+
+# Raw superblock layout (ext4, offset 1024 into the image).
+EXT4_SUPERBLOCK_OFFSET = 1024
+EXT4_SUPERBLOCK_SIZE = 1024
+EXT4_MAGIC = 0xEF53
+
+# RO_COMPAT 0x4000 == `shared_blocks`: a deduplicated, read-only filesystem.
+# The Linux ext4 driver refuses to mount one read-write
+# (`EXT4-fs: couldn't mount RDWR because of unsupported optional features (4000)`),
+# and `e2fsck -fn` on such an image exits 0, so nothing else in this module notices.
+RO_COMPAT_SHARED_BLOCKS = 0x4000
+COMPAT_HAS_JOURNAL = 0x0004
+
+
+class Ext4UnsafeImageError(ValueError):
+    """Raised when an image cannot be edited or safely mounted read-write as-is."""
+
+
+@dataclass(frozen=True)
+class Ext4Features:
+    """The three superblock feature words, plus the checks that matter to us."""
+
+    compat: int = 0
+    incompat: int = 0
+    ro_compat: int = 0
+    is_ext4: bool = False
+
+    @property
+    def shared_blocks(self) -> bool:
+        return bool(self.ro_compat & RO_COMPAT_SHARED_BLOCKS)
+
+    @property
+    def has_journal(self) -> bool:
+        return bool(self.compat & COMPAT_HAS_JOURNAL)
+
+    def names(self) -> List[str]:
+        out: List[str] = []
+        if self.has_journal:
+            out.append("has_journal")
+        if self.shared_blocks:
+            out.append("shared_blocks")
+        return out
+
+    def read_write_blockers(self) -> List[str]:
+        """Reasons a `mount -o rw` would be refused on this filesystem."""
+        problems: List[str] = []
+        if self.shared_blocks:
+            problems.append(
+                "shared_blocks (RO_COMPAT 0x4000): deduplicated read-only ext4 — "
+                "the kernel refuses a read-write mount"
+            )
+        return problems
+
+
+def read_superblock(source: str | Path | BinaryIO, *, read: int = EXT4_SUPERBLOCK_SIZE) -> Ext4Features:
+    """Read ext4 feature words straight from the superblock.
+
+    `source` is a path or any binary file object (a `ZipExtFile` works), so callers can
+    inspect an image inside an OTA package without extracting a 1 GB file. Only ~2 KiB
+    are read. A non-ext4 blob returns `Ext4Features(is_ext4=False)` rather than raising,
+    because packages legitimately carry non-ext4 payloads.
+    """
+    blob = b""
+    if hasattr(source, "read"):
+        fp, should_close = source, False
+    else:
+        fp, should_close = open(source, "rb"), True
+    try:
+        try:
+            fp.seek(EXT4_SUPERBLOCK_OFFSET)
+        except (OSError, ValueError):
+            return Ext4Features()
+        blob = fp.read(read)
+    finally:
+        if should_close:
+            fp.close()
+    if len(blob) < 0x68:
+        return Ext4Features()
+    magic = struct.unpack_from("<H", blob, 0x38)[0]
+    if magic != EXT4_MAGIC:
+        return Ext4Features()
+    compat = struct.unpack_from("<I", blob, 0x5C)[0]
+    incompat = struct.unpack_from("<I", blob, 0x60)[0]
+    ro_compat = struct.unpack_from("<I", blob, 0x64)[0]
+    return Ext4Features(compat=compat, incompat=incompat, ro_compat=ro_compat, is_ext4=True)
 
 
 @dataclass(frozen=True)
@@ -149,6 +235,30 @@ class Ext4Image:
         self._debugfs = find_e2fs_tool("debugfs")
         self._dumpe2fs = find_e2fs_tool("dumpe2fs")
         self._e2fsck = find_e2fs_tool("e2fsck")
+
+    def features(self) -> Ext4Features:
+        """Superblock feature words, read directly (works without `dumpe2fs`)."""
+        return read_superblock(self.path)
+
+    def assert_editable(self) -> Ext4Features:
+        """Refuse to edit a filesystem that cannot be mounted read-write.
+
+        A `shared_blocks` image only ever mounts `ro,noload` behind dm-verity. Editing it
+        in place is doubly wrong: the write is meaningless if the slot is verified, and
+        the resulting slot cannot be mounted read-write by a `system.img` that still mounts
+        `/md` with `defaults`. Both halves of that pairing have bricked a robot, so this
+        refuses instead of guessing.
+        """
+        feats = self.features()
+        blockers = feats.read_write_blockers()
+        if blockers:
+            raise Ext4UnsafeImageError(
+                f"refusing to modify {self.path.name}: " + "; ".join(blockers) + ". "
+                "Pair it with an updated system.img that mounts /md read-only, or convert it first "
+                "(`e2fsck -yf -E unshare_blocks` then `tune2fs -O has_journal`) and verify a "
+                "read-write mount on the robot before flashing."
+            )
+        return feats
 
     def get_fs_stats(self) -> Ext4Stats:
         res = subprocess.run(
@@ -266,6 +376,7 @@ class Ext4Image:
         verify_readback: bool = True,
     ) -> Dict[str, int]:
         """Apply file deletions and a directory overlay onto the ext4 image with SHA-256 readback."""
+        self.assert_editable()
         stats = self.get_fs_stats()
         default_reserve = min(32 * 1024 * 1024, int(stats.total_bytes * 0.03))
         reserve_bytes = default_reserve if min_free_bytes is None else max(0, min_free_bytes)
@@ -437,3 +548,21 @@ class Ext4Image:
                 f"e2fsck -fn failed on {self.path.name} (exit {res.returncode}):\n{res.stdout}\n{res.stderr}"
             )
         return res.stdout.strip()
+
+    def assert_mountable_read_write(self) -> Ext4Features:
+        """Check the properties a read-write mount needs — not just fs integrity.
+
+        `e2fsck -fn` exits 0 on a `shared_blocks` image, so fsck alone says nothing about
+        whether the slot can be mounted. This checks the superblock for read-write
+        blockers and for a journal; missing either is how a `/md` mount fails *after* the
+        slot has already been committed.
+        """
+        feats = self.features()
+        problems = feats.read_write_blockers()
+        if feats.is_ext4 and not feats.has_journal:
+            problems.append("no has_journal: a read-write ext4 mount replays or creates no journal")
+        if problems:
+            raise Ext4UnsafeImageError(
+                f"{self.path.name} is not safely mountable read-write: " + "; ".join(problems)
+            )
+        return feats
